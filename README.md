@@ -12,7 +12,7 @@ is a separate application.
 
 ## Build
 
-Requires Node 22 (minimum supported by the package: 20.19) and npm.
+Requires Git, Node 22 (minimum supported by the package: 20.19) and npm.
 
 ```bash
 npm ci
@@ -23,6 +23,11 @@ The result is `dist/`, including an API-versioned `console.json` inventory of
 every asset and its SHA-256. Build needs no Rust, platform checkout, system
 Python, database or CDN. Locked dependencies are downloaded at build time;
 the installed application loads its assets locally.
+
+`dist/console-source.json` records the source commit, dirty state and lockfile
+hash. Release assembly requires a clean build of the exact platform gitlink;
+stale assets from a different checkout are rejected. Development builds may
+record a dirty tree, but cannot be assembled into a pinned native release.
 
 ## Platform integration
 
