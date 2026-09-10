@@ -24,8 +24,8 @@ every asset and its SHA-256. Build needs no Rust, platform checkout, system
 Python, database or CDN. Locked dependencies are downloaded at build time;
 the installed application loads its assets locally.
 
-`dist/console-source.json` records the source commit, dirty state and lockfile
-hash. Release assembly requires a clean build of the exact platform gitlink;
+`build/console-source.json` records the source commit, dirty state and lockfile
+and asset-manifest hashes. Release assembly requires a clean build of the exact platform gitlink;
 stale assets from a different checkout are rejected. Development builds may
 record a dirty tree, but cannot be assembled into a pinned native release.
 

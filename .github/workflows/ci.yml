@@ -28,4 +28,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: console-${{ matrix.os }}
-          path: dist/
+          path: |
+            dist/
+            build/console-source.json
