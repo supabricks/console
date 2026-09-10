@@ -155,7 +155,7 @@ export async function qualifyIngestion({
     .selectOption({ label: "main · running" });
   await page.getByRole("button", { name: "Import file", exact: true }).click();
   const fixture = await readFile(
-    new URL("../../examples/console/orders.csv", import.meta.url),
+    new URL("../fixtures/orders.csv", import.meta.url),
   );
   const original = join(workspace, "device-orders.csv");
   await writeFile(original, fixture);

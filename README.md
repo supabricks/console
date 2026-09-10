@@ -1,33 +1,74 @@
-# Supabricks local console
+# Supabricks Console
 
-I02 adds [CSV/TSV ingestion](../docs/handbook/browser-imports.md). C01 provides the packaged local project/branch overview; C02 adds the
-[PostgreSQL workspace](../docs/handbook/database-workspace.md). It is separate from the
-Kubernetes UI in `../ui`. Runtime commands and browser support are documented in
-the [console runbook](../docs/handbook/local-console.md); the
-[C01 contract](../docs/architecture/c01-console.md) describes authentication,
-ownership and qualification.
+The Apache-2.0 browser UI for Supabricks: PostgreSQL workspace, CSV ingestion,
+branch controls and JupyterLab notebooks connected to local Sail kernels.
+This repository owns the React application, browser API client, locked frontend
+dependencies, asset inventory, notices and product browser tests.
 
-Build with Node 20.19+ (Node 22 in CI):
+Extracted with Git history from `supabricks/platform` PR #33 at
+`3d51a05c3d3df0ce67131e09ba8759720ea17252`. The notebook repairs and macOS
+qualification fixture fixes are included. The legacy Kubernetes `platform/ui`
+is a separate application.
 
-```sh
-npm ci --prefix console --no-audit --no-fund
+## Build
+
+Requires Node 22 (minimum supported by the package: 20.19) and npm.
+
+```bash
+npm ci
+npm run build
+```
+
+The result is `dist/`, including an API-versioned `console.json` inventory of
+every asset and its SHA-256. Build needs no Rust, platform checkout, system
+Python, database or CDN. Locked dependencies are downloaded at build time;
+the installed application loads its assets locally.
+
+## Platform integration
+
+`supabricks/platform` pins this repository as the `console/` Git submodule.
+It builds that exact source revision and packages `dist/` under `share/console`.
+The platform serves the UI and owns authentication, the HTTP/WebSocket bridge,
+PostgreSQL/Sail/Jupyter processes, ingestion, notebook files and installation.
+
+For local development, edit the console submodule in a platform worktree:
+
+```bash
+git submodule update --init console
+npm ci --prefix console
 npm run build --prefix console
+cargo run -p supabricks-local -- console --project /absolute/project --no-open
 ```
 
-The production build emits `dist/console.json` and hashed assets. Native assembly
-ships them alongside the executable. No Node server runs in the product.
+Start/configure the runtime using platform's source-build instructions first.
+Commit UI changes here; update the platform gitlink in a separate PR after
+qualification. Both repositories retain lockfiles and their own CI.
 
-Run the real browser workflow against a source binary and qualified native parts:
+The current host contract is same-origin `/api/`, an authenticated launch
+fragment, and a host-generated `supabricks-style-nonce` meta element for notebook
+styles. Opening `dist/index.html` as a file is not a functioning runtime.
+Moving the source makes future reuse on `supabricks.io` possible; hosted-to-local
+authentication and connection transport remain a later product phase.
 
-```sh
-npm exec --prefix console -- playwright install chromium
-node console/scripts/qualify.mjs --binary target/debug/supabricks \
-  --bundle /absolute/native-engine --helpers /absolute/helpers \
-  --python "$PWD/python/analytics/.venv/bin/python" --worker "$PWD/python/analytics/export.py" \
-  --report /tmp/console-report.json --screenshot /tmp/console-overview.png
+## Qualification
+
+Standalone CI typechecks and builds on Linux and macOS. Real product tests
+accept an explicitly supplied Supabricks binary and create disposable local
+projects/data roots:
+
+```bash
+npm exec -- playwright install chromium
+node scripts/qualify.mjs --binary /absolute/installed/supabricks --report /tmp/console.json
+node scripts/qualify-notebooks.mjs --binary /absolute/installed/supabricks --report /tmp/notebooks.json
 ```
 
-The harness creates and cleans a new private `/tmp/sb-c01-*` cell. It does not use
-the default user data root. CI's installed mode goes through
-`install/native/qualify_console.py` and denies external networking. The local
-source command restricts browser page requests but does not isolate host networking.
+The binary must serve this console build. For source qualification, scripts
+also accept `--bundle`, `--helpers`, `--python` and `--worker` paths. All assets
+and runtime processes must remain local; network-isolated, exact-archive
+qualification stays in platform's native-release CI. Platform combines these
+product tests with its separate notebook crash/recovery harness.
+
+`fixtures/orders.csv` is the synthetic browser scenario fixture imported from
+platform's `examples/console/orders.csv` at the extraction revision. It is test
+input, not a runtime dependency on platform source. `licenses/` supplements
+upstream package notices where their npm tarballs omit license text.
