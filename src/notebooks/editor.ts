@@ -19,6 +19,7 @@ import { EditorView } from "@codemirror/view";
 import type { IYText } from "@jupyter/ydoc";
 import type { IOutput, INotebookContent } from "@jupyterlab/nbformat";
 import type { KernelMessage } from "@jupyterlab/services";
+import type { NotebookBinding } from "../api";
 import type { NotebookChannel } from "./channel";
 import "@jupyterlab/theme-light-extension/style/theme.css";
 import "@jupyterlab/notebook/style/index.js";
@@ -208,7 +209,7 @@ export class DocumentEditor {
     all: boolean,
     progress: (message: string) => void,
     cancelled: () => boolean,
-    binding: { branch_id: string; epoch_id: string | null },
+    binding: NotebookBinding,
   ) {
     const cells = all
       ? [...this.widget.widgets]

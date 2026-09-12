@@ -9,6 +9,7 @@ import {
   notebookRefresh,
   type NotebookRefresh,
   type NotebookContext,
+  type NotebookBinding,
   type Overview,
 } from "./api";
 import { DocumentEditor, newDocument } from "./notebooks/editor";
@@ -19,7 +20,8 @@ const live = (c: NotebookContext | null) =>
   ["starting", "ready", "busy", "interrupting", "stopping"].includes(c.state);
 const available = (c: NotebookContext) =>
   ["ready", "busy", "interrupting"].includes(c.state);
-type Provenance = { branch_id: string; epoch_id: string | null };
+type Provenance = NotebookBinding;
+const bindingOf = (c: NotebookContext): Provenance => ({ branch_id: c.branch_id, epoch_id: c.epoch_id, environment: c.environment });
 
 export function Notebook({
   visible,
@@ -336,6 +338,7 @@ export function Notebook({
       key: crypto.randomUUID(),
       target: { branch: selected.id, revision: selected.revision },
       epoch,
+      environment: saved?.binding?.environment?.id ?? null,
     });
     update(created);
     const starting = await notebookLifecycle({
@@ -351,7 +354,7 @@ export function Notebook({
       | undefined;
     editor.current!.model.setMetadata("supabricks", {
       ...metadata,
-      binding: { branch_id: ready.branch_id, epoch_id: ready.epoch_id },
+      binding: bindingOf(ready),
     });
     await connect(ready);
   }
@@ -375,6 +378,19 @@ export function Notebook({
     update(next);
     await connect(await waitFor(c.id, ["ready"]));
   }
+  async function adoptEnvironment() {
+    const c = current.current;
+    if (!c?.prepared_environment_id) return;
+    if (!window.confirm("Use the prepared environment and discard Python variables? The snapshot stays the same and cells will not run automatically.")) return;
+    cancelRun.current = true;
+    disconnect();
+    update(await notebookLifecycle({ action: "adopt_environment", id: c.id, generation: c.generation,
+      key: crypto.randomUUID(), environment: c.prepared_environment_id }));
+    const ready = await waitFor(c.id, ["ready"]);
+    const metadata = editor.current!.model.getMetadata("supabricks") as Record<string, unknown> | undefined;
+    editor.current!.model.setMetadata("supabricks", { ...metadata, binding: bindingOf(ready) });
+    await connect(ready);
+  }
   async function interrupt() {
     const c = current.current;
     if (!c) return;
@@ -397,7 +413,7 @@ export function Notebook({
     cancelRun.current = false;
     setError("");
     const bound = current.current!;
-    const binding = { branch_id: bound.branch_id, epoch_id: bound.epoch_id };
+    const binding = bindingOf(bound);
     const metadata = editor.current!.model.getMetadata("supabricks") as
       | Record<string, unknown>
       | undefined;
@@ -558,6 +574,8 @@ export function Notebook({
         >
           Restart kernel
         </button>
+        <button disabled={busy || running || !context?.prepared_environment_id || context.prepared_environment_id === context.environment?.id}
+          onClick={() => void perform(adoptEnvironment)}>Use prepared environment</button>
         <button
           disabled={
             busy ||
@@ -592,8 +610,9 @@ export function Notebook({
       <p role="status">
         {message}{" "}
         {context &&
-          `Kernel: ${context.state}. Branch: ${boundBranch?.name ?? context.branch_id}. Epoch: ${context.epoch_id ?? "pending"}.`}
+          `Kernel: ${context.state}. Branch: ${boundBranch?.name ?? context.branch_id}. Epoch: ${context.epoch_id ?? "pending"}. Environment: ${context.environment?.id ?? "preparing offline default"}.`}
       </p>
+      {context?.environment_preparation_needed && <p>Environment declarations changed. Prepare them with <code>supabricks env prepare</code>, then choose “Use prepared environment”. The running kernel keeps its current dependencies.</p>}
       {typeof context?.epoch?.observed_at_ms === "number" && (
         <p className="subtle">
           Snapshot observed{" "}
@@ -611,7 +630,7 @@ export function Notebook({
       {provenance && (
         <p className="subtle">
           Most recent execution snapshot: {provenance.epoch_id ?? "unknown"} ·
-          Branch: {provenance.branch_id}
+          Branch: {provenance.branch_id} · Environment: {provenance.environment?.id ?? "not recorded"}
         </p>
       )}
       {error && (

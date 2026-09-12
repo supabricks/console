@@ -262,6 +262,12 @@ export async function qualifyNotebooks(page, { project, cli, checks }) {
     withOutputs.cells[0].metadata.supabricks_outputs.epoch_id,
   ).toBeTruthy();
   checks.push("product_opt_in_output_persistence_with_cell_provenance");
+  expect(withOutputs.cells[0].metadata.supabricks_outputs.environment.id).toBeTruthy();
+  expect(withOutputs.cells[0].metadata.supabricks_outputs.environment.inventory).toMatch(/^[a-f0-9]{64}$/);
+  expect(withOutputs.metadata.supabricks.binding.environment.id).toBe(
+    withOutputs.cells[0].metadata.supabricks_outputs.environment.id,
+  );
+  checks.push("product_persists_managed_environment_with_execution_provenance");
   await page
     .getByRole("button", { name: "Add Markdown cell", exact: true })
     .click();

@@ -112,9 +112,17 @@ export type NotebookFile = {
   document: NotebookDocument;
   revision: string;
 };
+export type EnvironmentIdentity = {
+  id: string;
+  inputs: { manifest: string; lock: string };
+  contract: string;
+  inventory: string;
+};
+export type NotebookBinding = { branch_id: string; epoch_id: string | null; environment?: EnvironmentIdentity | null };
 export type NotebookCommand =
-  | { action: "create"; key: string; target: Target; epoch?: string | null }
+  | { action: "create"; key: string; target: Target; epoch?: string | null; environment?: string | null }
   | { action: "status"; id: string; generation: number }
+  | { action: "adopt_environment"; id: string; generation: number; key: string; environment: string }
   | {
       action: "start" | "restart" | "interrupt" | "shutdown";
       id: string;
@@ -123,6 +131,10 @@ export type NotebookCommand =
     };
 export type NotebookContext = {
   id: string;
+  environment: EnvironmentIdentity | null;
+  environment_operation: string | null;
+  environment_preparation_needed: boolean;
+  prepared_environment_id: string | null;
   generation: number;
   branch_id: string;
   epoch_id: string | null;
