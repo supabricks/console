@@ -77,3 +77,13 @@ product tests with its separate notebook crash/recovery harness.
 platform's `examples/console/orders.csv` at the extraction revision. It is test
 input, not a runtime dependency on platform source. `licenses/` supplements
 upstream package notices where their npm tarballs omit license text.
+
+Notebook package controls are capability gated by
+`notebook_environment_controls: 1`. They use the bound console workspace API and
+never prepare an environment simply by opening a notebook. The panel distinguishes
+selected-kernel packages from prepared versions and uses explicit environment
+adoption. `scripts/qualify-environments.mjs --binary /path/to/supabricks --report
+/path/to/report.json` exercises the packaged product, including real kernels,
+PyPI resolution, offline preparation/import and an older capability response.
+The corresponding platform plan and transport contract are in
+`docs/architecture/ne05-console-environments.md` in `supabricks/platform`.

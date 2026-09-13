@@ -1218,3 +1218,16 @@ nav > button.active {
   flex-wrap: wrap;
   gap: 12px;
 }
+
+.environment-panel { margin: 1rem 0; padding: 1rem; border: 1px solid var(--border, #d2d9df); border-radius: 6px; }
+.environment-panel summary { cursor: pointer; font-weight: 600; }
+.environment-panel input:not([type="checkbox"]) { margin: .4rem; max-width: 100%; }
+.environment-panel pre { max-height: 14rem; overflow: auto; }
+.environment-panel table { width: 100%; }
+.environment-panel .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0; }
+.environment-panel .toolbar label { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.environment-panel button { padding: 6px 10px; border: 1px solid #ccd6cc; border-radius: 5px; background: #fff; color: #263f35; }
+.environment-panel button:disabled { cursor: default; }
+.environment-panel details { margin-top: 10px; }
+.environment-panel th, .environment-panel td { padding: 6px 8px; text-align: left; border-bottom: 1px solid #dfe5dd; }
+.environment-panel .subtle { font-size: 12px; line-height: 1.4; color: #52655a; }
