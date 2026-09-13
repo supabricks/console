@@ -15,7 +15,8 @@ if (!args["--binary"] || !args["--report"])
   throw new Error("Supply --binary and --report");
 // macOS resolves /tmp to /private/tmp. Leave room for tmp/<endpoint UUID>
 // and PostgreSQL's socket filename within the runtime's 104-byte budget.
-const root = await mkdtemp("/tmp/sb-nb-ui-"),
+// Use the canonical root for bundle paths as well as project bindings.
+const root = await realpath(await mkdtemp("/tmp/sb-nb-ui-")),
   project = root + "/project",
   data = root + "/data";
 await mkdir(project);
