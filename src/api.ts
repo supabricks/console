@@ -323,7 +323,7 @@ export async function workspace<T>(command: WorkspaceCommand): Promise<T> {
 
 export type Mapping = {
   version: 1;
-  format: "csv";
+  format: "csv" | "json_lines" | "json_array" | "json_document" | "parquet";
   delimiter: string;
   header: boolean;
   null_strings: string[];
@@ -345,7 +345,7 @@ export type ImportSource = {
 export type SourceStatus = {
   status: {
     source: ImportSource;
-    inspection: { mapping: Mapping; rows: (string | null)[][] } | null;
+    inspection: { mapping: Mapping; rows: (string | null)[][]; source_schema?: { input: string; name: string; arrow_type: string; nullable: boolean }[] | null } | null;
     error: string | null;
   };
   received: number;

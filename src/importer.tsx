@@ -40,6 +40,7 @@ const types = [
   "date",
   "timestamp",
   "timestamp_tz",
+  "jsonb",
 ];
 export function Importer({
   data,
@@ -56,6 +57,7 @@ export function Importer({
     [jobs, setJobs] = useState<ImportJob[]>([]);
   const [mapping, setMapping] = useState<Mapping>(options),
     [nulls, setNulls] = useState("[]");
+  const [fileFormat, setFileFormat] = useState<"auto" | Mapping["format"]>("auto");
   const [target, setTarget] = useState<Branch | undefined>(selected),
     [schema, setSchema] = useState("public"),
     [table, setTable] = useState("");
@@ -156,7 +158,7 @@ export function Importer({
     setError("");
     setApproved(false);
     if (!file.size || file.size > 100 * 1024 * 1024) {
-      setError("Select a nonempty CSV or TSV file up to 100 MiB.");
+      setError("Select a nonempty CSV, TSV, JSON, JSONL or Parquet file up to 100 MiB (JSON: 10 MiB).");
       return;
     }
     let parser: Mapping;
@@ -164,14 +166,22 @@ export function Importer({
       const values: unknown = JSON.parse(nulls);
       if (!Array.isArray(values) || !values.every((v) => typeof v === "string"))
         throw new Error("Enter an array of null strings");
+      const inferred: Mapping["format"] = /\.(jsonl|ndjson)$/i.test(file.name) ? "json_lines" : /\.json$/i.test(file.name) ? "json_array" : /\.parquet$/i.test(file.name) ? "parquet" : "csv";
+      const format = fileFormat === "auto" ? inferred : fileFormat;
+      if ((format === "json_array" || format === "json_document") && file.size > 10 * 1024 * 1024)
+        throw new Error("JSON arrays and documents are limited to 10 MiB. Use JSONL for larger inputs.");
       parser = {
+        ...options(),
         ...mapping,
+        columns: options().columns,
+        format,
         null_strings: values,
         delimiter:
           /\.tsv$/i.test(file.name) && mapping.delimiter === ","
             ? "\t"
             : mapping.delimiter,
       };
+      if (format !== "csv") parser = { ...parser, delimiter: ",", header: true, null_strings: [] };
     } catch (e) {
       setError(message(e));
       return;
@@ -287,7 +297,7 @@ export function Importer({
         <div>
           <h2>Bring your data.</h2>
           <p className="muted">
-            CSV & TSV · up to 100 MiB · a new PostgreSQL table
+            CSV, TSV, JSON, JSONL & Parquet · a new PostgreSQL table
           </p>
         </div>
         <button
@@ -307,6 +317,18 @@ export function Importer({
               {error}
             </div>
           )}
+          <label>
+            File format
+            <select aria-label="File format" value={fileFormat} disabled={!!busy} onChange={(e) => setFileFormat(e.target.value as typeof fileFormat)}>
+              <option value="auto">From filename (JSON array for .json)</option>
+              <option value="csv">CSV / TSV</option>
+              <option value="json_lines">JSONL — one object per line</option>
+              <option value="json_array">JSON — array of objects</option>
+              <option value="json_document">JSON — entire document as jsonb</option>
+              <option value="parquet">Parquet</option>
+            </select>
+            <span className="muted">Up to 100 MiB; JSON arrays and documents up to 10 MiB. Choose a format before uploading.</span>
+          </label>
           <div
             className="import-drop"
             onDragOver={(e) => e.preventDefault()}
@@ -316,11 +338,11 @@ export function Importer({
             }}
           >
             <label>
-              Choose CSV or TSV
+              Choose data file
               <input
-                aria-label="Choose CSV or TSV"
+                aria-label="Choose data file"
                 type="file"
-                accept=".csv,.tsv,text/csv,text/tab-separated-values"
+                accept=".csv,.tsv,.json,.jsonl,.ndjson,.parquet"
                 disabled={!!busy}
                 onChange={(e) => {
                   void choose(e.target.files?.[0]);
@@ -387,6 +409,7 @@ export function Importer({
           <fieldset disabled={!!busy}>
             <legend>Parser options</legend>
             <div className="import-options">
+              {mapping.format === "csv" && <>
               <label>
                 Delimiter
                 <select
@@ -425,6 +448,7 @@ export function Importer({
                   }}
                 />
               </label>
+              </>}
               <button
                 disabled={!staged || staged.state !== "staged"}
                 onClick={() => {
@@ -438,7 +462,7 @@ export function Importer({
                     void act({
                       action: "inspect",
                       source: staged!.id,
-                      mapping: { ...mapping, null_strings: values },
+                      mapping: { ...mapping, null_strings: mapping.format === "csv" ? values : [] },
                     });
                   } catch (e) {
                     setError(message(e));
@@ -462,10 +486,12 @@ export function Importer({
             <>
               <h3>Review columns</h3>
               <p className="muted">
-                Text preserves the original values. Choose conversions
-                explicitly. The sample is limited to 100 rows; every row is
-                checked during import.
+                Format: {mapping.format}. The sample is limited to 100 rows; every row is checked during import.
+                Missing JSON keys become SQL NULL; nested values use jsonb without flattening.
+                New keys or incompatible values outside this sample reject the entire import.
               </p>
+              {mapping.columns.some(c => c.data_type.kind === "jsonb") && <p className="notice" role="status">jsonb is available in PostgreSQL. The current analytical exporter cannot include tables with jsonb columns; importing this table can prevent a branch snapshot refresh.</p>}
+              {inspection.source_schema && <details><summary>Parquet source types</summary><ul>{inspection.source_schema.map(f => <li key={f.input}>{f.name}: {f.arrow_type}{f.nullable ? " (nullable)" : " (required)"}</li>)}</ul><p>Timestamp instants and microsecond precision are preserved. PostgreSQL timestamptz stores instants, not the original timezone name.</p></details>}
               <div className="import-grid">
                 <table aria-label="Column mapping">
                   <thead>
@@ -479,7 +505,7 @@ export function Importer({
                   <tbody>
                     {mapping.columns.map((c, i) => (
                       <tr key={i}>
-                        <td>{Number(c.input) + 1}</td>
+                        <td>{mapping.format === "csv" || mapping.format === "parquet" ? Number(c.input) + 1 : c.input}</td>
                         <td>
                           <input
                             aria-label={`Column ${i + 1} name`}
@@ -520,7 +546,7 @@ export function Importer({
                               })
                             }
                           >
-                            {types.map((t) => (
+                            {types.filter(t => mapping.format !== "csv" || t !== "jsonb").map((t) => (
                               <option key={t}>{t}</option>
                             ))}
                           </select>
