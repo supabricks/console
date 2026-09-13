@@ -1,6 +1,6 @@
 # Supabricks Console
 
-The Apache-2.0 browser UI for Supabricks: PostgreSQL workspace, CSV ingestion,
+The Apache-2.0 browser UI for Supabricks: PostgreSQL and Spark SQL workspaces, CSV/TSV/JSON/Parquet ingestion,
 branch controls and JupyterLab notebooks connected to local Sail kernels.
 This repository owns the React application, browser API client, locked frontend
 dependencies, asset inventory, notices and product browser tests.
@@ -87,3 +87,10 @@ adoption. `scripts/qualify-environments.mjs --binary /path/to/supabricks --repor
 PyPI resolution, offline preparation/import and an older capability response.
 The corresponding platform plan and transport contract are in
 `docs/architecture/ne05-console-environments.md` in `supabricks/platform`.
+
+The C03 Analytics mode uses the platform's `analytical_workspace: 1` capability.
+It publishes immutable snapshots, opens owned Sail readers and compares bounded
+results across epochs. The real browser harness includes import-to-Spark,
+refresh isolation, capacity, expiry, cancellation and reconnect qualification.
+`--slice analytics` runs the C03 scenarios for local iteration; release CI always
+runs the full harness without a slice filter.

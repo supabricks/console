@@ -1,3 +1,4 @@
+import { qualifyAnalytics, verifyAnalyticsAfterRestart } from "./analytics.mjs";
 // Real browser + native runtime. Every mutation is confined to a new /tmp root.
 import { qualifyIngestion } from "./ingestion.mjs";
 import { chromium, expect } from "@playwright/test";
@@ -178,26 +179,37 @@ try {
   checks.push(
     "reload uses authenticated session; repeated CLI launch reuses the bound bridge with a fresh one-use ticket",
   );
-  await qualifyWorkspace({
-    page,
-    context,
-    origin,
-    cli,
-    checks,
-    screenshot: options["--screenshot"],
-  });
-  await qualifyIngestion({
+  if (options["--slice"] !== "analytics") {
+    await qualifyWorkspace({
+      page,
+      context,
+      origin,
+      cli,
+      checks,
+      screenshot: options["--screenshot"],
+    });
+    await qualifyIngestion({
+      page,
+      context,
+      browser,
+      origin,
+      cli,
+      checks,
+      workspace,
+      data,
+      project,
+      launch,
+      screenshot: options["--screenshot"],
+    });
+  }
+  const analyticalReader = await qualifyAnalytics({
     page,
     context,
     browser,
     origin,
     cli,
     checks,
-    workspace,
-    data,
-    project,
     launch,
-    screenshot: options["--screenshot"],
   });
   if (options["--screenshot"]) {
     await mkdir(dirname(resolve(options["--screenshot"])), { recursive: true });
@@ -253,7 +265,9 @@ try {
   checks.push(
     "whole-cell shutdown and console-driven restart retain branches and issue fresh browser sessions",
   );
-  await verifySavedAfterRestart(page, checks);
+  if (options["--slice"] !== "analytics")
+    await verifySavedAfterRestart(page, checks);
+  await verifyAnalyticsAfterRestart(cli, analyticalReader, checks);
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page.getByRole("alert")).toContainText("Session closed");
   await page.reload();

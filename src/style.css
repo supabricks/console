@@ -1110,21 +1110,92 @@ nav > button.active {
 .importer .panel-heading {
   align-items: center;
 }
-.notebook-view { padding: 32px 0; }
-.notebook-toolbar { display: flex; gap: 14px; align-items: center; margin: -14px 0 18px; }
-.notebook-layout { display: grid; grid-template-columns: 220px 1fr; gap: 24px; }
-.notebook-files { display: flex; flex-direction: column; gap: 6px; }
-.notebook-files button { text-align: left; padding: 9px 10px; border: 0; background: transparent; border-radius: 6px; cursor: pointer; }
-.notebook-files button.selected { background: #e7eee9; font-weight: 600; }
-.notebook-editor { display: grid; gap: 14px; max-width: 900px; }
-.notebook-cell { border: 1px solid #d7dfda; border-radius: 8px; padding: 12px; background: #fff; }
-.notebook-cell textarea { display: block; width: 100%; min-height: 110px; margin-top: 8px; border: 0; resize: vertical; font: 14px/1.5 ui-monospace, SFMono-Regular, monospace; outline: none; }
-.notebook-output { margin: 10px 0 0; padding: 10px; background: #f1f5f2; white-space: pre-wrap; overflow-wrap: anywhere; }
-.notebook-toolbar { flex-wrap: wrap; }
-.notebook-widget-host { min-width: 0; }
-.supabricks-notebook { height: 680px; position: relative; background: white; border: 1px solid #d7dfda; }
-.supabricks-notebook .jp-Cell[data-execution-state]::before { content: attr(data-execution-state); display: block; padding: 4px 12px; font-size: 12px; color: #47534d; }
-@media (max-width: 800px) { .notebook-layout { grid-template-columns: 1fr; } }
+.notebook-view {
+  padding: 32px 0;
+}
+.notebook-toolbar {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin: -14px 0 18px;
+}
+.notebook-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 24px;
+}
+.notebook-files {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.notebook-files button {
+  text-align: left;
+  padding: 9px 10px;
+  border: 0;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.notebook-files button.selected {
+  background: #e7eee9;
+  font-weight: 600;
+}
+.notebook-editor {
+  display: grid;
+  gap: 14px;
+  max-width: 900px;
+}
+.notebook-cell {
+  border: 1px solid #d7dfda;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+.notebook-cell textarea {
+  display: block;
+  width: 100%;
+  min-height: 110px;
+  margin-top: 8px;
+  border: 0;
+  resize: vertical;
+  font:
+    14px/1.5 ui-monospace,
+    SFMono-Regular,
+    monospace;
+  outline: none;
+}
+.notebook-output {
+  margin: 10px 0 0;
+  padding: 10px;
+  background: #f1f5f2;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.notebook-toolbar {
+  flex-wrap: wrap;
+}
+.notebook-widget-host {
+  min-width: 0;
+}
+.supabricks-notebook {
+  height: 680px;
+  position: relative;
+  background: white;
+  border: 1px solid #d7dfda;
+}
+.supabricks-notebook .jp-Cell[data-execution-state]::before {
+  content: attr(data-execution-state);
+  display: block;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: #47534d;
+}
+@media (max-width: 800px) {
+  .notebook-layout {
+    grid-template-columns: 1fr;
+  }
+}
 .import-drop {
   border: 1px dashed var(--muted, #657a73);
   border-radius: 10px;
@@ -1219,15 +1290,102 @@ nav > button.active {
   gap: 12px;
 }
 
-.environment-panel { margin: 1rem 0; padding: 1rem; border: 1px solid var(--border, #d2d9df); border-radius: 6px; }
-.environment-panel summary { cursor: pointer; font-weight: 600; }
-.environment-panel input:not([type="checkbox"]) { margin: .4rem; max-width: 100%; }
-.environment-panel pre { max-height: 14rem; overflow: auto; }
-.environment-panel table { width: 100%; }
-.environment-panel .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0; }
-.environment-panel .toolbar label { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.environment-panel button { padding: 6px 10px; border: 1px solid #ccd6cc; border-radius: 5px; background: #fff; color: #263f35; }
-.environment-panel button:disabled { cursor: default; }
-.environment-panel details { margin-top: 10px; }
-.environment-panel th, .environment-panel td { padding: 6px 8px; text-align: left; border-bottom: 1px solid #dfe5dd; }
-.environment-panel .subtle { font-size: 12px; line-height: 1.4; color: #52655a; }
+.environment-panel {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid var(--border, #d2d9df);
+  border-radius: 6px;
+}
+.environment-panel summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.environment-panel input:not([type="checkbox"]) {
+  margin: 0.4rem;
+  max-width: 100%;
+}
+.environment-panel pre {
+  max-height: 14rem;
+  overflow: auto;
+}
+.environment-panel table {
+  width: 100%;
+}
+.environment-panel .toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+}
+.environment-panel .toolbar label {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.environment-panel button {
+  padding: 6px 10px;
+  border: 1px solid #ccd6cc;
+  border-radius: 5px;
+  background: #fff;
+  color: #263f35;
+}
+.environment-panel button:disabled {
+  cursor: default;
+}
+.environment-panel details {
+  margin-top: 10px;
+}
+.environment-panel th,
+.environment-panel td {
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1px solid #dfe5dd;
+}
+.environment-panel .subtle {
+  font-size: 12px;
+  line-height: 1.4;
+  color: #52655a;
+}
+
+.engine-switch {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.engine-switch [aria-pressed="true"] {
+  background: #1d5143;
+  color: white;
+}
+.analytical-workspace .panel {
+  padding: 24px;
+  margin-bottom: 20px;
+}
+.analytical-workspace code {
+  overflow-wrap: anywhere;
+}
+.analytical-workspace textarea {
+  display: block;
+  width: 100%;
+  margin: 12px 0;
+  font-family: monospace;
+}
+.analytical-workspace select {
+  max-width: 100%;
+}
+.analytical-workspace .workspace-controls {
+  flex-wrap: wrap;
+}
+
+.analytical-workspace pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.analytical-workspace .analytics-session label {
+  display: block;
+  min-width: 0;
+}
+.analytical-workspace .analytics-session select {
+  width: 100%;
+}

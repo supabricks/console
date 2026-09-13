@@ -1,3 +1,4 @@
+import { Analytics } from "./analytics";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { authenticate, overview, logout, ApiError, type Overview } from "./api";
@@ -40,6 +41,7 @@ function Mark() {
   );
 }
 function App() {
+  const [engine, setEngine] = useState("postgresql");
   const [view, setView] = useState("overview");
   const [notebooksOpened, setNotebooksOpened] = useState(false);
   const [data, setData] = useState<Overview | null>(null);
@@ -433,13 +435,44 @@ function App() {
               <span>Supabricks local preview</span>
             </footer>
           </div>
+          {authenticated && data && view === "workspace" && (
+            <div
+              className="engine-switch"
+              role="group"
+              aria-label="Query engine"
+            >
+              <button
+                className="button"
+                aria-pressed={engine === "postgresql"}
+                onClick={() => setEngine("postgresql")}
+              >
+                PostgreSQL
+              </button>
+              <button
+                className="button"
+                disabled={!data.capabilities.analytical_workspace}
+                aria-pressed={engine === "analytics"}
+                onClick={() => setEngine("analytics")}
+              >
+                Analytics
+              </button>
+            </div>
+          )}
+          {authenticated && data && data.capabilities.analytical_workspace && (
+            <Analytics
+              data={data}
+              selectedId={selection}
+              onSelect={setSelection}
+              visible={view === "workspace" && engine === "analytics"}
+            />
+          )}
           {authenticated && data && (
             <Workspace
               data={data}
               selectedId={selection}
               onSelect={setSelection}
               onRefresh={refresh}
-              visible={view === "workspace"}
+              visible={view === "workspace" && engine === "postgresql"}
             />
           )}
           {authenticated && data && notebooksOpened && (
