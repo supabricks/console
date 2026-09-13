@@ -302,6 +302,7 @@ export async function qualifyEnvironments(
   const archive = path.join(root, "environment.zip");
   await cli("env", "export-bundle", archive, "--offline", "--wait");
   const firstAfterExport = (await cli("env", "status")).active_generation;
+  expect((await page.request.get(page.url())).status()).toBe(200);
   await other
     .getByText("Import environment and diagnostics", { exact: true })
     .click();
@@ -319,6 +320,7 @@ export async function qualifyEnvironments(
     "humanize==4.12.3",
   );
   expect((await cli("env", "status")).active_generation).toBe(firstAfterExport);
+  expect((await page.request.get(page.url())).status()).toBe(200);
   checks.push("offline_bundle_import_prepares_only_the_bound_project");
   await expect(
     other.getByRole("button", { name: "Remove humanize", exact: true }),
@@ -333,6 +335,7 @@ export async function qualifyEnvironments(
   expect((await cli("env", "status")).active_generation).toBe(firstAfterExport);
   checks.push("package_removal_only_changes_the_prepared_project_environment");
 
+  expect((await page.request.get(page.url())).status()).toBe(200);
   await otherContext.close();
   // Older runtime responses must retain baseline notebooks without new commands.
   const environmentRequests = [];

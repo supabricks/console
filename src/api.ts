@@ -45,7 +45,9 @@ async function request(path: string, method = "GET", body?: object) {
       method,
       credentials: "same-origin",
       cache: "no-store",
-      signal: AbortSignal.timeout(6000),
+      // The server bounds JSON requests at eight seconds. Allow its response
+      // to arrive after a six-second daemon admission/verification check.
+      signal: AbortSignal.timeout(10000),
       headers: {
         "X-Supabricks-Console": "1",
         ...(body ? { "Content-Type": "application/json" } : {}),
