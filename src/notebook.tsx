@@ -13,6 +13,7 @@ import {
   type Overview,
 } from "./api";
 import { DocumentEditor, newDocument } from "./notebooks/editor";
+import { EnvironmentPanel } from "./notebooks/environment";
 import { NotebookChannel } from "./notebooks/channel";
 
 const live = (c: NotebookContext | null) =>
@@ -21,7 +22,11 @@ const live = (c: NotebookContext | null) =>
 const available = (c: NotebookContext) =>
   ["ready", "busy", "interrupting"].includes(c.state);
 type Provenance = NotebookBinding;
-const bindingOf = (c: NotebookContext): Provenance => ({ branch_id: c.branch_id, epoch_id: c.epoch_id, environment: c.environment });
+const bindingOf = (c: NotebookContext): Provenance => ({
+  branch_id: c.branch_id,
+  epoch_id: c.epoch_id,
+  environment: c.environment,
+});
 
 export function Notebook({
   visible,
@@ -54,6 +59,9 @@ export function Notebook({
     [contexts, setContexts] = useState<NotebookContext[]>([]);
   const [persistOutputs, setPersistOutputs] = useState(false),
     [provenance, setProvenance] = useState<Provenance | null>(null);
+  const [preparedEnvironment, setPreparedEnvironment] = useState<string | null>(
+    null,
+  );
   const [snapshotRefresh, setSnapshotRefresh] =
     useState<NotebookRefresh | null>(null);
   const refreshing =
@@ -209,8 +217,7 @@ export function Notebook({
       instance.load(loaded.document);
       reset(file, loaded.revision);
       const meta = loaded.document.metadata.supabricks as
-        | { binding?: Provenance; outputs?: Provenance }
-        | undefined;
+        { binding?: Provenance; outputs?: Provenance } | undefined;
       setBranch(meta?.binding?.branch_id ?? "");
       setProvenance(meta?.outputs ?? null);
       setMessage("Opened without starting a kernel or running cells.");
@@ -327,8 +334,7 @@ export function Notebook({
     }
     disconnect();
     const saved = editor.current!.model.getMetadata("supabricks") as
-      | { binding?: Provenance }
-      | undefined;
+      { binding?: Provenance } | undefined;
     const epoch =
       !latest && saved?.binding?.branch_id === branch
         ? saved.binding.epoch_id
@@ -350,8 +356,7 @@ export function Notebook({
     update(starting);
     const ready = await waitFor(created.id, ["ready"]);
     const metadata = editor.current!.model.getMetadata("supabricks") as
-      | Record<string, unknown>
-      | undefined;
+      Record<string, unknown> | undefined;
     editor.current!.model.setMetadata("supabricks", {
       ...metadata,
       binding: bindingOf(ready),
@@ -380,15 +385,36 @@ export function Notebook({
   }
   async function adoptEnvironment() {
     const c = current.current;
-    if (!c?.prepared_environment_id) return;
-    if (!window.confirm("Use the prepared environment and discard Python variables? The snapshot stays the same and cells will not run automatically.")) return;
+    if (
+      !c?.prepared_environment_id ||
+      (data.capabilities.notebook_environment_controls === 1 &&
+        preparedEnvironment !== c.prepared_environment_id)
+    )
+      return;
+    if (
+      !window.confirm(
+        "Use the prepared environment and discard Python variables? The snapshot stays the same and cells will not run automatically.",
+      )
+    )
+      return;
     cancelRun.current = true;
     disconnect();
-    update(await notebookLifecycle({ action: "adopt_environment", id: c.id, generation: c.generation,
-      key: crypto.randomUUID(), environment: c.prepared_environment_id }));
+    update(
+      await notebookLifecycle({
+        action: "adopt_environment",
+        id: c.id,
+        generation: c.generation,
+        key: crypto.randomUUID(),
+        environment: c.prepared_environment_id,
+      }),
+    );
     const ready = await waitFor(c.id, ["ready"]);
-    const metadata = editor.current!.model.getMetadata("supabricks") as Record<string, unknown> | undefined;
-    editor.current!.model.setMetadata("supabricks", { ...metadata, binding: bindingOf(ready) });
+    const metadata = editor.current!.model.getMetadata("supabricks") as
+      Record<string, unknown> | undefined;
+    editor.current!.model.setMetadata("supabricks", {
+      ...metadata,
+      binding: bindingOf(ready),
+    });
     await connect(ready);
   }
   async function interrupt() {
@@ -415,8 +441,7 @@ export function Notebook({
     const bound = current.current!;
     const binding = bindingOf(bound);
     const metadata = editor.current!.model.getMetadata("supabricks") as
-      | Record<string, unknown>
-      | undefined;
+      Record<string, unknown> | undefined;
     editor.current!.model.setMetadata("supabricks", {
       ...metadata,
       binding,
@@ -574,8 +599,19 @@ export function Notebook({
         >
           Restart kernel
         </button>
-        <button disabled={busy || running || !context?.prepared_environment_id || context.prepared_environment_id === context.environment?.id}
-          onClick={() => void perform(adoptEnvironment)}>Use prepared environment</button>
+        <button
+          disabled={
+            busy ||
+            running ||
+            !context?.prepared_environment_id ||
+            context.prepared_environment_id === context.environment?.id ||
+            (data.capabilities.notebook_environment_controls === 1 &&
+              preparedEnvironment !== context?.prepared_environment_id)
+          }
+          onClick={() => void perform(adoptEnvironment)}
+        >
+          Use prepared environment
+        </button>
         <button
           disabled={
             busy ||
@@ -612,7 +648,23 @@ export function Notebook({
         {context &&
           `Kernel: ${context.state}. Branch: ${boundBranch?.name ?? context.branch_id}. Epoch: ${context.epoch_id ?? "pending"}. Environment: ${context.environment?.id ?? "preparing offline default"}.`}
       </p>
-      {context?.environment_preparation_needed && <p>Environment declarations changed. Prepare them with <code>supabricks env prepare</code>, then choose “Use prepared environment”. The running kernel keeps its current dependencies.</p>}
+      {data.capabilities.notebook_environment_controls === 1 && (
+        <EnvironmentPanel
+          key={`${data.project.id}:${data.worktree}`}
+          visible={visible}
+          data={data}
+          context={context}
+          onPrepared={setPreparedEnvironment}
+        />
+      )}
+      {data.capabilities.notebook_environment_controls !== 1 &&
+        context?.environment_preparation_needed && (
+          <p>
+            Environment declarations changed. Prepare them with{" "}
+            <code>supabricks env prepare</code>, then choose “Use prepared
+            environment”. The running kernel keeps its current dependencies.
+          </p>
+        )}
       {typeof context?.epoch?.observed_at_ms === "number" && (
         <p className="subtle">
           Snapshot observed{" "}
@@ -630,7 +682,8 @@ export function Notebook({
       {provenance && (
         <p className="subtle">
           Most recent execution snapshot: {provenance.epoch_id ?? "unknown"} ·
-          Branch: {provenance.branch_id} · Environment: {provenance.environment?.id ?? "not recorded"}
+          Branch: {provenance.branch_id} · Environment:{" "}
+          {provenance.environment?.id ?? "not recorded"}
         </p>
       )}
       {error && (

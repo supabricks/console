@@ -26,6 +26,7 @@ export interface Overview {
     sql: boolean;
     ingestion: boolean;
     notebooks: boolean;
+    notebook_environment_controls?: number;
   };
 }
 export class ApiError extends Error {
@@ -118,11 +119,27 @@ export type EnvironmentIdentity = {
   contract: string;
   inventory: string;
 };
-export type NotebookBinding = { branch_id: string; epoch_id: string | null; environment?: EnvironmentIdentity | null };
+export type NotebookBinding = {
+  branch_id: string;
+  epoch_id: string | null;
+  environment?: EnvironmentIdentity | null;
+};
 export type NotebookCommand =
-  | { action: "create"; key: string; target: Target; epoch?: string | null; environment?: string | null }
+  | {
+      action: "create";
+      key: string;
+      target: Target;
+      epoch?: string | null;
+      environment?: string | null;
+    }
   | { action: "status"; id: string; generation: number }
-  | { action: "adopt_environment"; id: string; generation: number; key: string; environment: string }
+  | {
+      action: "adopt_environment";
+      id: string;
+      generation: number;
+      key: string;
+      environment: string;
+    }
   | {
       action: "start" | "restart" | "interrupt" | "shutdown";
       id: string;
@@ -394,4 +411,66 @@ export function upload(
     // The browser streams the File directly; no arrayBuffer/text/base64 copy.
     xhr.send(file);
   });
+}
+
+export type EnvironmentInputs = { manifest: string; lock: string };
+export type EnvironmentOperation = {
+  id: string;
+  key: string;
+  state: string;
+  error: string | null;
+  cancel_requested: boolean;
+  generation: string | null;
+  workflow: { change: EnvironmentChange; offline: boolean } | null;
+  result: {
+    changes:
+      { package: string; before: string | null; after: string | null }[] | null;
+    network: string;
+  } | null;
+};
+export type EnvironmentChange =
+  | { kind: "add"; requirement: string }
+  | { kind: "remove"; package: string }
+  | { kind: "sync" | "lock" }
+  | { kind: "adopt"; path: string; expected: EnvironmentInputs }
+  | { kind: "import_bundle"; path: string };
+export type EnvironmentStatus = {
+  version: 1;
+  inputs: EnvironmentInputs | null;
+  active_generation: string | null;
+  preparation_needed: boolean;
+  python_version: string;
+  target: string;
+  declaration: {
+    state: "absent" | "present" | "missing_lock" | "invalid";
+    requirements: string[];
+    error: string | null;
+  };
+  protected_packages: Record<string, string>;
+  environments: {
+    id: string;
+    inputs: EnvironmentInputs;
+    python_version: string | null;
+    packages: Record<string, string> | null;
+    compatible: boolean;
+  }[];
+  operations: EnvironmentOperation[];
+};
+export type EnvironmentCommand =
+  | { action: "inspect" }
+  | { action: "initialize"; template: "base"; key: string }
+  | {
+      action: "manage";
+      key: string;
+      expected: EnvironmentInputs;
+      change: EnvironmentChange;
+      offline: boolean;
+    }
+  | { action: "find"; key: string }
+  | { action: "declaration"; path: string }
+  | { action: "status" | "cancel"; id: string };
+export async function environment<T>(command: EnvironmentCommand): Promise<T> {
+  return (
+    await request("workspace", "POST", { action: "environment", command })
+  ).value;
 }
