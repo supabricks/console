@@ -1,3 +1,4 @@
+import { qualifyFormats } from "./formats.mjs";
 import { expect } from "@playwright/test";
 import { readFile, writeFile, open } from "node:fs/promises";
 import { join, dirname } from "node:path";
@@ -160,7 +161,7 @@ export async function qualifyIngestion({
   const original = join(workspace, "device-orders.csv");
   await writeFile(original, fixture);
   await page.getByLabel("Null strings", { exact: true }).fill('["NULL"]');
-  const picker = page.getByLabel("Choose CSV or TSV");
+  const picker = page.getByLabel("Choose data file");
   // A prior isolated browser context can leave the page without activation on
   // headless Linux. Exercise the native keyboard control on the active page.
   await page.bringToFront();
@@ -333,7 +334,7 @@ export async function qualifyIngestion({
     await file.close();
   }
   await page.getByRole("button", { name: "Import file", exact: true }).click();
-  await page.getByLabel("Choose CSV or TSV").setInputFiles(large);
+  await page.getByLabel("Choose data file").setInputFiles(large);
   await expect(page.getByRole("table", { name: "Column mapping" })).toBeVisible(
     { timeout: 120000 },
   );
@@ -458,6 +459,7 @@ export async function qualifyIngestion({
   record(
     "drag/drop uses the same real upload service; invalid conversion rolls back, explicit retry preserves job identity, and retained source disposal works",
   );
+  await qualifyFormats({ page, api, raw, cli, checks, branch });
   await page.setViewportSize({ width: 390, height: 844 });
   expect(
     await page.evaluate(
