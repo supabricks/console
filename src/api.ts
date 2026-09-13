@@ -22,6 +22,7 @@ export interface Overview {
     needs_attention: boolean;
   };
   capabilities: {
+    analytical_workspace?: number;
     overview: boolean;
     sql: boolean;
     ingestion: boolean;
@@ -345,7 +346,18 @@ export type ImportSource = {
 export type SourceStatus = {
   status: {
     source: ImportSource;
-    inspection: { mapping: Mapping; rows: (string | null)[][]; source_schema?: { input: string; name: string; arrow_type: string; nullable: boolean }[] | null } | null;
+    inspection: {
+      mapping: Mapping;
+      rows: (string | null)[][];
+      source_schema?:
+        | {
+            input: string;
+            name: string;
+            arrow_type: string;
+            nullable: boolean;
+          }[]
+        | null;
+    } | null;
     error: string | null;
   };
   received: number;
@@ -475,4 +487,71 @@ export async function environment<T>(command: EnvironmentCommand): Promise<T> {
   return (
     await request("workspace", "POST", { action: "environment", command })
   ).value;
+}
+
+export type AnalyticalQuery = {
+  id: string;
+  epoch_id: string;
+  state: string;
+  sql?: string;
+  columns?: { name: string; type: string }[];
+  rows?: (string | null)[][];
+  truncated?: boolean;
+  error?: string;
+};
+export type AnalyticalSession = {
+  id: string;
+  branch_id: string;
+  epoch_id: string;
+  state: string;
+  expires_at_ms: number;
+  error: string | null;
+  metadata: {
+    observed_at_ms: number;
+    published_at_ms: number;
+    ordinal: number;
+  } | null;
+  query: AnalyticalQuery | null;
+};
+export type AnalyticalSnapshot = {
+  epoch_id: string;
+  ordinal: number;
+  branch_id: string;
+  source_revision: number;
+  observed_at_ms: number;
+  published_at_ms: number;
+  database: string;
+  source: { lsn?: string };
+  tables: {
+    schema: string;
+    name: string;
+    columns: { name: string; type: string }[];
+  }[];
+};
+export type AnalyticalRefresh = {
+  id: string;
+  state: string;
+  branch_id: string;
+  error: string | null;
+  epoch_id: string | null;
+};
+export type AnalyticsCommand =
+  | { action: "snapshot"; target: Target }
+  | { action: "open" | "refresh"; target: Target; key: string }
+  | {
+      action:
+        "refresh_status" | "cancel_refresh" | "status" | "close" | "cancel";
+      id: string;
+    }
+  | { action: "list" }
+  | {
+      action: "sql";
+      id: string;
+      sql: string;
+      max_rows: number;
+      timeout_ms: number;
+    };
+export async function analytics<T>(command: AnalyticsCommand): Promise<T> {
+  return (await request("workspace", "POST", { action: "analytics", command }))
+    .value;
 }

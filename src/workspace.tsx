@@ -37,7 +37,7 @@ type Tab = {
   saveTitle: string;
 };
 
-function Results({ result }: { result: SqlResult }) {
+export function Results({ result }: { result: SqlResult }) {
   const [scroll, setScroll] = useState(0);
   const [copied, setCopied] = useState("");
   const start = Math.max(0, Math.floor(scroll / 34) - 4),
