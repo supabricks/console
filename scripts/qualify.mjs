@@ -1,3 +1,4 @@
+import { qualifyProjects } from "./projects.mjs";
 import { qualifyAnalytics, verifyAnalyticsAfterRestart } from "./analytics.mjs";
 // Real browser + native runtime. Every mutation is confined to a new /tmp root.
 import { qualifyIngestion } from "./ingestion.mjs";
@@ -211,6 +212,26 @@ try {
     checks,
     launch,
   });
+  if (!options["--slice"]) {
+    const cliAt = async (at, ...command) => {
+      const result = await exec(binary, [...command, "--project", at], {
+        env,
+        timeout: 180000,
+        maxBuffer: 2 * 1024 * 1024,
+      });
+      return JSON.parse(result.stdout);
+    };
+    await qualifyProjects({
+      page,
+      context,
+      cliAt,
+      cli,
+      root: workspace,
+      binary,
+      worker: options["--worker"],
+      checks,
+    });
+  }
   if (options["--screenshot"]) {
     await mkdir(dirname(resolve(options["--screenshot"])), { recursive: true });
     await page.screenshot({
@@ -234,9 +255,20 @@ try {
     "narrow viewport remains usable and refresh works from the keyboard",
   );
   const status = await cli("status");
-  const processRecord = status.runtime.processes.find((p) =>
+  // PK06 opens consoles for multiple deployments. Kill the browser's own bridge.
+  let processRecord;
+  for (const candidate of status.runtime.processes.filter((p) =>
     p.role.startsWith("console-"),
-  );
+  )) {
+    const ready = JSON.parse(
+      await readFile(join(data, "tmp", candidate.role, "ready.json"), "utf8"),
+    );
+    if (
+      ready.port === Number(new URL(origin).port) &&
+      ready.pid === candidate.pid
+    )
+      processRecord = candidate;
+  }
   const supervisor = status.runtime.processes.find(
     (p) => p.role === "supervisor",
   );
