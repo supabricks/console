@@ -85,13 +85,11 @@ export async function qualifyProjects({
       r.url().endsWith("/api/workspace") &&
       r.postDataJSON()?.command?.action === "chunk",
   );
-  await packages
-    .getByLabel("Select project package")
-    .setInputFiles({
-      name: "cancel.sbproj",
-      mimeType: "application/gzip",
-      buffer: Buffer.alloc(1024 * 1024),
-    });
+  await packages.getByLabel("Select project package").setInputFiles({
+    name: "cancel.sbproj",
+    mimeType: "application/gzip",
+    buffer: Buffer.alloc(1024 * 1024),
+  });
   await chunkStarted;
   await packages
     .getByRole("button", { name: "Cancel upload", exact: true })
@@ -355,6 +353,9 @@ with zipfile.ZipFile(p/'dependencies/incomplete.zip','w') as z:
   await expect(
     popup.getByRole("article", { name: "Project identity" }),
   ).toContainText(binding.deployment_id);
+  await expect(
+    popup.getByRole("heading", { name: "Apply succeeded", exact: true }),
+  ).toBeVisible();
   await popup.close();
   await expect(packages.getByLabel("New draft path")).toHaveValue(
     "queries/draft.sql",
@@ -362,5 +363,5 @@ with zipfile.ZipFile(p/'dependencies/incomplete.zip','w') as z:
   checks.push(
     "PK06 CLI-created and browser-created deployments reopen with identical identity and preserve the original tab drafts",
   );
-  await page.getByRole("link", { name: "Overview", exact: false }).click();
+  await page.getByRole("link", { name: "Overview", exact: true }).click();
 }
