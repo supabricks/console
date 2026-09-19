@@ -356,6 +356,20 @@ with zipfile.ZipFile(p/'dependencies/incomplete.zip','w') as z:
   await expect(
     popup.getByRole("heading", { name: "Apply succeeded", exact: true }),
   ).toBeVisible();
+  await popup.getByLabel("Apply request key").fill(applyKey);
+  await popup
+    .getByRole("button", { name: "Recover apply by key", exact: true })
+    .click();
+  await expect(
+    popup.getByRole("status").filter({ hasText: admitted.id }),
+  ).toBeVisible();
+  await popup
+    .getByRole("button", { name: "Refresh project", exact: true })
+    .click();
+  const latest = await cliAt(imported, "project", "installed");
+  await expect(
+    popup.getByRole("status").filter({ hasText: latest.active_revision }),
+  ).toBeVisible();
   await popup.close();
   await expect(packages.getByLabel("New draft path")).toHaveValue(
     "queries/draft.sql",

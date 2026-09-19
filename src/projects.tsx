@@ -123,6 +123,11 @@ export function Projects({
     setView(v);
     setImports(list.imports);
     if (recoverLatest && v.operation) {
+      setPlan((previous) =>
+        previous && previous.digest !== v.operation!.plan.digest
+          ? null
+          : previous,
+      );
       setOperation(v.operation);
       setKey(v.operation.key);
       setUncertain(false);
