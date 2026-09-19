@@ -255,9 +255,20 @@ try {
     "narrow viewport remains usable and refresh works from the keyboard",
   );
   const status = await cli("status");
-  const processRecord = status.runtime.processes.find((p) =>
+  // PK06 opens consoles for multiple deployments. Kill the browser's own bridge.
+  let processRecord;
+  for (const candidate of status.runtime.processes.filter((p) =>
     p.role.startsWith("console-"),
-  );
+  )) {
+    const ready = JSON.parse(
+      await readFile(join(data, "tmp", candidate.role, "ready.json"), "utf8"),
+    );
+    if (
+      ready.port === Number(new URL(origin).port) &&
+      ready.pid === candidate.pid
+    )
+      processRecord = candidate;
+  }
   const supervisor = status.runtime.processes.find(
     (p) => p.role === "supervisor",
   );

@@ -567,7 +567,7 @@ export async function analytics<T>(command: AnalyticsCommand): Promise<T> {
     .value;
 }
 
-// PK06 uses the platform's source graph, deployment identity and signed plan verbatim.
+// PK06 uses the platform's source graph, deployment identity and reviewed plan verbatim.
 export type ProjectSource =
   | { kind: "current" }
   | { kind: "imported"; id: string };
