@@ -1389,3 +1389,57 @@ nav > button.active {
 .analytical-workspace .analytics-session select {
   width: 100%;
 }
+
+.project-packages {
+  max-width: 1200px;
+  margin: auto;
+}
+.package-card {
+  padding: 24px;
+  margin: 24px 0;
+  border: 1px solid var(--border, #ddd);
+  border-radius: 12px;
+  background: white;
+}
+.package-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+}
+.project-packages label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+}
+.project-packages input,
+.project-packages select,
+.project-packages textarea {
+  padding: 10px;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  max-width: 100%;
+  min-width: 0;
+}
+.project-packages code,
+.project-packages dd {
+  overflow-wrap: anywhere;
+}
+.project-packages dd {
+  margin: 4px 0 12px;
+}
+.project-packages dt {
+  font-weight: 600;
+}
+.project-packages .button {
+  margin: 6px 8px 6px 0;
+}
+.package-asset {
+  max-height: 400px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 16px;
+  background: #f6f7f9;
+}

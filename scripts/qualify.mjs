@@ -1,3 +1,4 @@
+import { qualifyProjects } from "./projects.mjs";
 import { qualifyAnalytics, verifyAnalyticsAfterRestart } from "./analytics.mjs";
 // Real browser + native runtime. Every mutation is confined to a new /tmp root.
 import { qualifyIngestion } from "./ingestion.mjs";
@@ -211,6 +212,26 @@ try {
     checks,
     launch,
   });
+  if (!options["--slice"]) {
+    const cliAt = async (at, ...command) => {
+      const result = await exec(binary, [...command, "--project", at], {
+        env,
+        timeout: 180000,
+        maxBuffer: 2 * 1024 * 1024,
+      });
+      return JSON.parse(result.stdout);
+    };
+    await qualifyProjects({
+      page,
+      context,
+      cliAt,
+      cli,
+      root: workspace,
+      binary,
+      worker: options["--worker"],
+      checks,
+    });
+  }
   if (options["--screenshot"]) {
     await mkdir(dirname(resolve(options["--screenshot"])), { recursive: true });
     await page.screenshot({

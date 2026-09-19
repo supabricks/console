@@ -94,3 +94,12 @@ results across epochs. The real browser harness includes import-to-Spark,
 refresh isolation, capacity, expiry, cancellation and reconnect qualification.
 `--slice analytics` runs the C03 scenarios for local iteration; release CI always
 runs the full harness without a slice filter.
+
+Project packaging (`project_packaging: 1`) adds `.sbproj` preview, device upload,
+verified unpack into a new project, explicit deployment creation/attachment,
+CLI-equivalent plan/apply with lost-reply recovery, installed revision/source
+comparison, deterministic download and installed asset drafts. Opening a package
+or reopening its console starts no kernel. The native product harness includes
+these scenarios; use `scripts/qualify-projects.mjs` with the same `--binary` and
+source runtime options to run them alone. Platform's contract and bounds are in
+`docs/architecture/pk06-console-projects.md`.

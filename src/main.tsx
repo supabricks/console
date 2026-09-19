@@ -1,3 +1,4 @@
+import { Projects } from "./projects";
 import { Analytics } from "./analytics";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -154,6 +155,14 @@ function App() {
               }}
             >
               Notebooks
+            </button>
+          )}
+          {data?.capabilities.project_packaging === 1 && (
+            <button
+              className={view === "packages" ? "active" : ""}
+              onClick={() => setView("packages")}
+            >
+              Project packages
             </button>
           )}
         </nav>
@@ -435,6 +444,11 @@ function App() {
               <span>Supabricks local preview</span>
             </footer>
           </div>
+          {authenticated &&
+            data &&
+            data.capabilities.project_packaging === 1 && (
+              <Projects data={data} visible={view === "packages"} />
+            )}
           {authenticated && data && view === "workspace" && (
             <div
               className="engine-switch"

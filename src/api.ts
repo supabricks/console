@@ -23,6 +23,7 @@ export interface Overview {
   };
   capabilities: {
     analytical_workspace?: number;
+    project_packaging?: number;
     overview: boolean;
     sql: boolean;
     ingestion: boolean;
@@ -39,7 +40,12 @@ export class ApiError extends Error {
   }
 }
 let csrf = "";
-async function request(path: string, method = "GET", body?: object) {
+async function request(
+  path: string,
+  method = "GET",
+  body?: object,
+  timeout = 10000,
+) {
   let response: Response;
   try {
     response = await fetch(`/api/${path}`, {
@@ -48,7 +54,7 @@ async function request(path: string, method = "GET", body?: object) {
       cache: "no-store",
       // The server bounds JSON requests at eight seconds. Allow its response
       // to arrive after a six-second daemon admission/verification check.
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(timeout),
       headers: {
         "X-Supabricks-Console": "1",
         ...(body ? { "Content-Type": "application/json" } : {}),
@@ -438,7 +444,8 @@ export type EnvironmentOperation = {
   workflow: { change: EnvironmentChange; offline: boolean } | null;
   result: {
     changes:
-      { package: string; before: string | null; after: string | null }[] | null;
+      | { package: string; before: string | null; after: string | null }[]
+      | null;
     network: string;
   } | null;
 };
@@ -540,7 +547,11 @@ export type AnalyticsCommand =
   | { action: "open" | "refresh"; target: Target; key: string }
   | {
       action:
-        "refresh_status" | "cancel_refresh" | "status" | "close" | "cancel";
+        | "refresh_status"
+        | "cancel_refresh"
+        | "status"
+        | "close"
+        | "cancel";
       id: string;
     }
   | { action: "list" }
@@ -554,4 +565,152 @@ export type AnalyticsCommand =
 export async function analytics<T>(command: AnalyticsCommand): Promise<T> {
   return (await request("workspace", "POST", { action: "analytics", command }))
     .value;
+}
+
+// PK06 uses the platform's source graph, deployment identity and signed plan verbatim.
+export type ProjectSource =
+  | { kind: "current" }
+  | { kind: "imported"; id: string };
+export interface DeploymentContext {
+  api_version: number;
+  definition_id: string;
+  deployment_id: string;
+  runtime_project_id: string;
+  workspace_id: string;
+  realm_id: string;
+  target: string;
+  legacy: boolean;
+  revision: number;
+  actor_id: string;
+  effective_principal_id: string;
+  identity_provider: string;
+}
+export interface ProjectInspection {
+  definition: { id: string; name: string; format_version: number };
+  source_sha256: string;
+  target: string;
+  targets: Record<string, unknown>;
+  capabilities: string[];
+  order: string[];
+  resources: Record<
+    string,
+    {
+      declaration: {
+        kind: string;
+        file?: string;
+        database?: string;
+        environment?: string;
+      };
+      dependencies: string[];
+    }
+  >;
+  environments: Record<
+    string,
+    { bundles?: Record<string, { status: string; sha256: string }> }
+  >;
+  files: Record<string, { sha256: string; bytes: number }>;
+  unresolved_bindings: { resource: string; kind: string }[];
+  limitations: string[];
+}
+export interface PackageReport {
+  archive_sha256: string;
+  content_sha256: string;
+  inspection: ProjectInspection;
+  exclusions: string[];
+}
+export interface ProjectResource {
+  kind: string;
+  origin: string;
+  branch: string | null;
+  file: string | null;
+  database: string | null;
+  environment: string | null;
+  generation: string | null;
+  receipt?: unknown;
+}
+export interface ProjectStep {
+  logical: string;
+  kind: string;
+  action: string;
+  branch: string | null;
+  expected_revision: number | null;
+  file: string | null;
+  database: string | null;
+  environment: string | null;
+  initialization?: unknown;
+}
+export interface ProjectPlan {
+  api_version: number;
+  digest: string;
+  context: DeploymentContext;
+  worktree: string;
+  source_sha256: string;
+  archive_sha256: string;
+  content_sha256: string;
+  installation: string | null;
+  options: { adopt: Record<string, string> };
+  previous: string | null;
+  steps: ProjectStep[];
+  retained: string[];
+  dependency_closure?: Record<string, unknown>;
+}
+export interface ProjectOperation {
+  id: string;
+  key: string;
+  plan: ProjectPlan;
+  state: string;
+  next_step: number;
+  cancel_requested: boolean;
+  resources: Record<string, ProjectResource>;
+  error: string | null;
+}
+export interface ProjectView {
+  operation: ProjectOperation | null;
+  worktree: string;
+  inspection: ProjectInspection | null;
+  source_error: { message: string } | null;
+  binding_error: { message: string } | null;
+  context: DeploymentContext | null;
+  deployments: DeploymentContext[];
+  installed_source_sha256: string | null;
+  installed: {
+    active_revision: string | null;
+    resources: Record<string, ProjectResource>;
+    preparation_needed: boolean;
+    environment_worktrees: Record<string, string>;
+  } | null;
+}
+export type ProjectApplyCommand =
+  | { action: "plan"; options: { adopt: Record<string, string> } }
+  | { action: "apply"; plan: ProjectPlan; key: string }
+  | { action: "find"; key: string }
+  | { action: "status" | "cancel"; id: string }
+  | { action: "installed" }
+  | { action: "asset"; logical: string }
+  | { action: "draft"; logical: string; path: string };
+export type ProjectCommand =
+  | { action: "list" }
+  | { action: "view" | "export"; target: string | null }
+  | { action: "begin"; bytes: number }
+  | { action: "chunk"; id: string; offset: number; hex: string }
+  | { action: "verify"; id: string; target: string | null }
+  | { action: "dispose"; id: string }
+  | { action: "unpack"; id: string; destination: string; target: string | null }
+  | { action: "download"; id: string; offset: number }
+  | { action: "bind"; key: string; target: string | null }
+  | { action: "attach"; deployment: string }
+  | { action: "apply"; command: ProjectApplyCommand }
+  | { action: "reopen"; environment: string | null };
+export async function project<T>(
+  source: ProjectSource,
+  command: ProjectCommand,
+): Promise<T> {
+  return (
+    await request(
+      "workspace",
+      "POST",
+      { action: "project", source, command },
+      130000,
+    )
+  ).value;
 }
