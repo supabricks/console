@@ -109,7 +109,9 @@ export function Projects({
   const [draft, setDraft] = useState("");
   const cancelled = useRef(false);
   const mounted = useRef(false);
-  async function refresh(selected = source) {
+  const refreshEpoch = useRef(0);
+  async function refresh(selected = source, recoverLatest = true) {
+    const epoch = ++refreshEpoch.current;
     const [v, list] = await Promise.all([
       project<ProjectView>(selected, {
         action: "view",
@@ -117,9 +119,10 @@ export function Projects({
       }),
       project<{ imports: Import[] }>(current, { action: "list" }),
     ]);
+    if (epoch !== refreshEpoch.current) return;
     setView(v);
     setImports(list.imports);
-    if (v.operation) {
+    if (recoverLatest && v.operation) {
       setOperation(v.operation);
       setKey(v.operation.key);
       setUncertain(false);
@@ -742,7 +745,7 @@ export function Projects({
                     "No apply was admitted for this key. Plan again before applying.",
                   );
                 }
-                await refresh();
+                await refresh(source, false);
               })
             }
           >
