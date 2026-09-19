@@ -20,6 +20,7 @@ export async function qualifyProjects({
   await page
     .getByRole("button", { name: "Database workspace", exact: true })
     .click();
+  await page.getByRole("button", { name: "PostgreSQL", exact: true }).click();
   const workspace = page.getByRole("region", {
     name: "Database workspace",
     exact: true,
