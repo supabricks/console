@@ -1,4 +1,5 @@
 import { Projects } from "./projects";
+import { NewProject } from "./new-project";
 import { Analytics } from "./analytics";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -125,14 +126,23 @@ function App() {
         <span className="eyebrow workspace-label">YOUR WORKSPACE</span>
         <div className="project-card">
           <span className="project-monogram">
-            {data?.project.name[0]?.toUpperCase() ?? "S"}
+            {data?.console_home
+              ? "S"
+              : (data?.project.name[0]?.toUpperCase() ?? "S")}
           </span>
           <div>
-            <strong>{data?.project.name ?? "Local project"}</strong>
+            <strong>
+              {data?.console_home
+                ? "Your projects"
+                : (data?.project.name ?? "Local project")}
+            </strong>
             <span>On this device</span>
           </div>
         </div>
         <nav aria-label="Project navigation">
+          {data?.capabilities.project_creation === 1 && (
+            <NewProject data={data} />
+          )}
           <a
             href="#main"
             aria-current={view === "overview" ? "page" : undefined}
@@ -140,13 +150,15 @@ function App() {
           >
             <span aria-hidden="true">▦</span> Overview
           </a>
-          <button
-            className={view === "workspace" ? "active" : ""}
-            onClick={() => setView("workspace")}
-          >
-            Database workspace
-          </button>
-          {data?.capabilities.notebooks && (
+          {!data?.console_home && (
+            <button
+              className={view === "workspace" ? "active" : ""}
+              onClick={() => setView("workspace")}
+            >
+              Database workspace
+            </button>
+          )}
+          {!data?.console_home && data?.capabilities.notebooks && (
             <button
               className={view === "notebooks" ? "active" : ""}
               onClick={() => {
@@ -157,14 +169,15 @@ function App() {
               Notebooks
             </button>
           )}
-          {data?.capabilities.project_packaging === 1 && (
-            <button
-              className={view === "packages" ? "active" : ""}
-              onClick={() => setView("packages")}
-            >
-              Project packages
-            </button>
-          )}
+          {!data?.console_home &&
+            data?.capabilities.project_packaging === 1 && (
+              <button
+                className={view === "packages" ? "active" : ""}
+                onClick={() => setView("packages")}
+              >
+                Project packages
+              </button>
+            )}
         </nav>
         <div className="sidebar-bottom">
           <span className="local-pill">
@@ -182,7 +195,11 @@ function App() {
         <header>
           <div className="crumb">
             Workspace <span>/</span>{" "}
-            <strong>{data?.project.name ?? "Overview"}</strong>
+            <strong>
+              {data?.console_home
+                ? "Your projects"
+                : (data?.project.name ?? "Overview")}
+            </strong>
           </div>
           <div className="header-actions">
             <span className={`runtime-pill ${ready ? "ready" : ""}`}>
@@ -230,9 +247,15 @@ function App() {
           <div hidden={view !== "overview"}>
             <div className="page-heading">
               <div>
-                <span className="eyebrow">PROJECT OVERVIEW</span>
+                <span className="eyebrow">
+                  {data?.console_home ? "LOCAL WORKSPACE" : "PROJECT OVERVIEW"}
+                </span>
                 <h1>A home for your local data.</h1>
-                <p>Your branches and runtime, together in one place.</p>
+                <p>
+                  {data?.console_home
+                    ? "Create a project to organize your databases, notebooks and analytics."
+                    : "Your branches and runtime, together in one place."}
+                </p>
               </div>
               {authenticated && (
                 <button
@@ -258,39 +281,41 @@ function App() {
             )}
             {data && (
               <>
-                <section className="stats" aria-label="Project summary">
-                  <article>
-                    <span className="eyebrow">BRANCHES</span>
-                    <div className="stat-value">
-                      {data.branches.length.toString().padStart(2, "0")}
-                      <span className="stat-icon" aria-hidden="true">
-                        ⑂
-                      </span>
-                    </div>
-                    <p>Independent places to build</p>
-                  </article>
-                  <article>
-                    <span className="eyebrow">DATABASE ENGINE</span>
-                    <div className="stat-value engine-value">
-                      Postgres <span>{data.runtime.postgres_major}</span>
-                    </div>
-                    <p>Native on your machine</p>
-                  </article>
-                  <article>
-                    <span className="eyebrow">LOCAL RUNTIME</span>
-                    <div
-                      className={`stat-value runtime-value ${ready ? "healthy" : ""}`}
-                    >
-                      <i />
-                      {ready ? "Ready" : error ? "Unavailable" : "Starting"}
-                    </div>
-                    <p>
-                      {ready
-                        ? "Available for your applications"
-                        : "Run supabricks doctor for details"}
-                    </p>
-                  </article>
-                </section>
+                {!data.console_home && (
+                  <section className="stats" aria-label="Project summary">
+                    <article>
+                      <span className="eyebrow">BRANCHES</span>
+                      <div className="stat-value">
+                        {data.branches.length.toString().padStart(2, "0")}
+                        <span className="stat-icon" aria-hidden="true">
+                          ⑂
+                        </span>
+                      </div>
+                      <p>Independent places to build</p>
+                    </article>
+                    <article>
+                      <span className="eyebrow">DATABASE ENGINE</span>
+                      <div className="stat-value engine-value">
+                        Postgres <span>{data.runtime.postgres_major}</span>
+                      </div>
+                      <p>Native on your machine</p>
+                    </article>
+                    <article>
+                      <span className="eyebrow">LOCAL RUNTIME</span>
+                      <div
+                        className={`stat-value runtime-value ${ready ? "healthy" : ""}`}
+                      >
+                        <i />
+                        {ready ? "Ready" : error ? "Unavailable" : "Starting"}
+                      </div>
+                      <p>
+                        {ready
+                          ? "Available for your applications"
+                          : "Run supabricks doctor for details"}
+                      </p>
+                    </article>
+                  </section>
+                )}
                 <section
                   className="branch-panel"
                   aria-labelledby="branch-title"
@@ -298,9 +323,19 @@ function App() {
                   <div className="panel-heading">
                     <div>
                       <h2 id="branch-title">
-                        Branches <span>{data.branches.length}</span>
+                        {data.console_home ? (
+                          "Projects"
+                        ) : (
+                          <>
+                            Branches <span>{data.branches.length}</span>
+                          </>
+                        )}
                       </h2>
-                      <p>Each branch is a separate version of your database.</p>
+                      <p>
+                        {data.console_home
+                          ? "Every database, notebook and query belongs to a project."
+                          : "Each branch is a separate version of your database."}
+                      </p>
                     </div>
                     {data.branches.length > 0 && (
                       <label className="search">
@@ -318,29 +353,49 @@ function App() {
                       <span className="empty-mark" aria-hidden="true">
                         ⑂
                       </span>
-                      <h3>Your first branch starts here.</h3>
+                      <h3>
+                        {data.console_home
+                          ? "Open or create a project."
+                          : "Your first branch starts here."}
+                      </h3>
                       <p>
-                        Create a database in this project, then refresh to see
-                        it here.
+                        {data.console_home
+                          ? "Choose New project to get a database and workspace ready to use."
+                          : "Create a database in this project to start working with your data."}
                       </p>
-                      <div className="command">
-                        <code>{createCommand}</code>
-                        <button
-                          aria-label="Copy create database command"
-                          onClick={async () => {
-                            try {
-                              await navigator.clipboard.writeText(
-                                createCommand,
-                              );
-                              setCopied(true);
-                            } catch {
-                              setCopied(false);
-                            }
-                          }}
-                        >
-                          {copied ? "Copied" : "Copy"}
-                        </button>
-                      </div>
+                      {data.console_home ? (
+                        <NewProject data={data} />
+                      ) : (
+                        <>
+                          <button
+                            className="button primary"
+                            onClick={() => setView("workspace")}
+                          >
+                            Create a database
+                          </button>
+                          <details>
+                            <summary>Terminal alternative</summary>
+                            <div className="command">
+                              <code>{createCommand}</code>
+                              <button
+                                aria-label="Copy create database command"
+                                onClick={async () => {
+                                  try {
+                                    await navigator.clipboard.writeText(
+                                      createCommand,
+                                    );
+                                    setCopied(true);
+                                  } catch {
+                                    setCopied(false);
+                                  }
+                                }}
+                              >
+                                {copied ? "Copied" : "Copy"}
+                              </button>
+                            </div>
+                          </details>
+                        </>
+                      )}
                     </div>
                   ) : (
                     <div className="table-scroll">
@@ -424,19 +479,21 @@ function App() {
                     <span>Updated {updated}</span>
                   </div>
                 </section>
-                <section
-                  className="project-details"
-                  aria-label="Project location"
-                >
-                  <div>
-                    <span className="eyebrow">PROJECT DIRECTORY</span>
-                    <code>{data.worktree}</code>
-                  </div>
-                  <div>
-                    <span className="eyebrow">PROJECT ID</span>
-                    <code>{data.project.id}</code>
-                  </div>
-                </section>
+                {!data.console_home && (
+                  <section
+                    className="project-details"
+                    aria-label="Project location"
+                  >
+                    <div>
+                      <span className="eyebrow">PROJECT DIRECTORY</span>
+                      <code>{data.worktree}</code>
+                    </div>
+                    <div>
+                      <span className="eyebrow">PROJECT ID</span>
+                      <code>{data.project.id}</code>
+                    </div>
+                  </section>
+                )}
               </>
             )}
             <footer>
@@ -472,15 +529,17 @@ function App() {
               </button>
             </div>
           )}
-          {authenticated && data && data.capabilities.analytical_workspace && (
-            <Analytics
-              data={data}
-              selectedId={selection}
-              onSelect={setSelection}
-              visible={view === "workspace" && engine === "analytics"}
-            />
-          )}
-          {authenticated && data && (
+          {authenticated &&
+            data &&
+            data.capabilities.analytical_workspace === 1 && (
+              <Analytics
+                data={data}
+                selectedId={selection}
+                onSelect={setSelection}
+                visible={view === "workspace" && engine === "analytics"}
+              />
+            )}
+          {authenticated && data && !data.console_home && (
             <Workspace
               data={data}
               selectedId={selection}

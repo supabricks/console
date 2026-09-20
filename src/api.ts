@@ -13,6 +13,7 @@ export interface Overview {
   project: { id: string; name: string };
   worktree: string;
   data_dir: string;
+  console_home?: boolean;
   branches: Branch[];
   runtime: {
     ready: boolean;
@@ -22,6 +23,7 @@ export interface Overview {
     needs_attention: boolean;
   };
   capabilities: {
+    project_creation?: number;
     analytical_workspace?: number;
     project_packaging?: number;
     overview: boolean;
@@ -570,7 +572,7 @@ export async function analytics<T>(command: AnalyticsCommand): Promise<T> {
 // PK06 uses the platform's source graph, deployment identity and reviewed plan verbatim.
 export type ProjectSource =
   | { kind: "current" }
-  | { kind: "imported"; id: string };
+  | { kind: "imported" | "created"; id: string };
 export interface DeploymentContext {
   api_version: number;
   definition_id: string;
@@ -690,6 +692,7 @@ export type ProjectApplyCommand =
   | { action: "draft"; logical: string; path: string };
 export type ProjectCommand =
   | { action: "list" }
+  | { action: "create"; id: string; name: string; attempt: string }
   | { action: "view" | "export"; target: string | null }
   | { action: "begin"; bytes: number }
   | { action: "chunk"; id: string; offset: number; hex: string }

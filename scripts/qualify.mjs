@@ -1,3 +1,4 @@
+import { qualifyProjectCreation } from "./project-create.mjs";
 import { qualifyProjects } from "./projects.mjs";
 import { qualifyAnalytics, verifyAnalyticsAfterRestart } from "./analytics.mjs";
 // Real browser + native runtime. Every mutation is confined to a new /tmp root.
@@ -300,6 +301,30 @@ try {
   if (options["--slice"] !== "analytics")
     await verifySavedAfterRestart(page, checks);
   await verifyAnalyticsAfterRestart(cli, analyticalReader, checks);
+  await qualifyProjectCreation({
+    context,
+    launchHome: async () =>
+      JSON.parse(
+        (
+          await exec(binary, ["console", "--no-open"], {
+            env,
+            cwd: workspace,
+            timeout: 120000,
+          })
+        ).stdout,
+      ),
+    cliAt: async (at, ...command) =>
+      JSON.parse(
+        (
+          await exec(binary, [...command, "--project", at], {
+            env,
+            timeout: 180000,
+            maxBuffer: 2 * 1024 * 1024,
+          })
+        ).stdout,
+      ),
+    checks,
+  });
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page.getByRole("alert")).toContainText("Session closed");
   await page.reload();

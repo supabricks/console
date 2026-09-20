@@ -103,3 +103,15 @@ or reopening its console starts no kernel. The native product harness includes
 these scenarios; use `scripts/qualify-projects.mjs` with the same `--binary` and
 source runtime options to run them alone. Platform's contract and bounds are in
 `docs/architecture/pk06-console-projects.md`.
+
+Project creation is a browser operation when the platform advertises
+`project_creation: 1`: **New project → Create and open** provisions the project
+and its `main` database through the durable platform apply journal. The console
+home only launches projects; databases, saved queries, notebooks, imports and
+Spark execution belong to the selected project. The browser retains only a public
+creation request ID for interrupted-setup recovery. It never chooses a host path
+or supplies a runtime project ID to asset requests.
+
+`scripts/project-create.mjs` exercises the real browser/runtime creation flow,
+reload and lost-response recovery, project switching and asset isolation. It is
+also part of the installed console qualification suite.
