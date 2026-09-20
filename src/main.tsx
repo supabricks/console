@@ -529,14 +529,16 @@ function App() {
               </button>
             </div>
           )}
-          {authenticated && data && data.capabilities.analytical_workspace && (
-            <Analytics
-              data={data}
-              selectedId={selection}
-              onSelect={setSelection}
-              visible={view === "workspace" && engine === "analytics"}
-            />
-          )}
+          {authenticated &&
+            data &&
+            data.capabilities.analytical_workspace === 1 && (
+              <Analytics
+                data={data}
+                selectedId={selection}
+                onSelect={setSelection}
+                visible={view === "workspace" && engine === "analytics"}
+              />
+            )}
           {authenticated && data && !data.console_home && (
             <Workspace
               data={data}
