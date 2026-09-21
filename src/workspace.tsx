@@ -132,12 +132,14 @@ export function Workspace({
   selectedId,
   onSelect,
   onRefresh,
+  onPublish,
   visible,
 }: {
   data: Overview;
   selectedId: string | null;
   onSelect: (id: string) => void;
   onRefresh: () => Promise<void>;
+  onPublish?: () => void;
   visible: boolean;
 }) {
   const selected =
@@ -676,6 +678,7 @@ export function Workspace({
       </div>
       {data.capabilities.ingestion && (
         <Importer
+          onPublish={onPublish}
           data={data}
           selected={selected}
           onOpen={(job) => {

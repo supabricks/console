@@ -46,10 +46,12 @@ export function Importer({
   data,
   selected,
   onOpen,
+  onPublish,
 }: {
   data: Overview;
   selected?: Branch;
   onOpen: (job: ImportJob) => void;
+  onPublish?: () => void;
 }) {
   const [open, setOpen] = useState(false),
     [source, setSource] = useState<SourceStatus | null>(null);
@@ -805,6 +807,9 @@ export function Importer({
                   >
                     Retry retained source
                   </button>
+                )}
+                {j.state === "succeeded" && onPublish && data.capabilities.catalog_workspace === 1 && (
+                  <button onClick={onPublish}>Publish imported data</button>
                 )}
                 {j.state === "succeeded" && (
                   <button onClick={() => onOpen(j)}>Open {j.load.table}</button>

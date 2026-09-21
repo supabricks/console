@@ -1,3 +1,4 @@
+import { Data, type DataHandoff } from "./data";
 import { Projects } from "./projects";
 import { NewProject } from "./new-project";
 import { Analytics } from "./analytics";
@@ -43,6 +44,8 @@ function Mark() {
   );
 }
 function App() {
+  const [handoff, setHandoff] = useState<DataHandoff | null>(null);
+  const [notebookPath, setNotebookPath] = useState<string | null>(null);
   const [engine, setEngine] = useState("postgresql");
   const [view, setView] = useState("overview");
   const [notebooksOpened, setNotebooksOpened] = useState(false);
@@ -140,6 +143,15 @@ function App() {
           </div>
         </div>
         <nav aria-label="Project navigation">
+          {!data?.console_home &&
+            data?.capabilities.catalog_workspace === 1 && (
+              <button
+                className={view === "data" ? "active" : ""}
+                onClick={() => setView("data")}
+              >
+                Data
+              </button>
+            )}
           {data?.capabilities.project_creation === 1 && (
             <NewProject data={data} />
           )}
@@ -529,10 +541,29 @@ function App() {
               </button>
             </div>
           )}
+          {authenticated && data && view === "data" && (
+            <Data
+              key={data.project.id}
+              data={data}
+              selectedId={selection}
+              onSelect={setSelection}
+              onSql={(value) => {
+                setHandoff(value);
+                setEngine("analytics");
+                setView("workspace");
+              }}
+              onNotebook={(path) => {
+                setNotebookPath(path);
+                setNotebooksOpened(true);
+                setView("notebooks");
+              }}
+            />
+          )}
           {authenticated &&
             data &&
             data.capabilities.analytical_workspace === 1 && (
               <Analytics
+                handoff={handoff}
                 data={data}
                 selectedId={selection}
                 onSelect={setSelection}
@@ -545,12 +576,17 @@ function App() {
               selectedId={selection}
               onSelect={setSelection}
               onRefresh={refresh}
+              onPublish={() => setView("data")}
               visible={view === "workspace" && engine === "postgresql"}
             />
           )}
           {authenticated && data && notebooksOpened && (
             <Suspense fallback={<p role="status">Loading notebook editor…</p>}>
-              <Notebook visible={view === "notebooks"} data={data} />
+              <Notebook
+                visible={view === "notebooks"}
+                data={data}
+                suggestedPath={notebookPath}
+              />
             </Suspense>
           )}
         </main>

@@ -1,3 +1,4 @@
+import type { DataHandoff } from "./data";
 import { useEffect, useRef, useState } from "react";
 import {
   analytics,
@@ -49,16 +50,28 @@ export function Analytics({
   selectedId,
   onSelect,
   visible,
+  handoff,
 }: {
   data: Overview;
   selectedId: string | null;
   onSelect: (id: string) => void;
   visible: boolean;
+  handoff?: DataHandoff | null;
 }) {
   const branch =
     data.branches.find((b) => b.id === selectedId) ??
     data.branches.find((b) => b.is_default) ??
     data.branches[0];
+  const [catalogEpoch, setCatalogEpoch] = useState<string | undefined>();
+  const [catalogMode, setCatalogMode] = useState(false);
+  useEffect(() => {
+    if (handoff) {
+      setActive("");
+      setSql(handoff.sql);
+      setCatalogMode(handoff.catalog);
+      setCatalogEpoch(handoff.epoch);
+    }
+  }, [handoff?.id]);
   const [sessions, setSessions] = useState<AnalyticalSession[]>([]);
   const [active, setActive] = useState("");
   const [snapshot, setSnapshot] = useState<AnalyticalSnapshot | null>(null);
@@ -206,12 +219,38 @@ export function Analytics({
         </p>
       )}
       <div className="panel workspace-controls">
+        {catalogEpoch && (
+          <p>
+            Selected fixed publication epoch: <code>{catalogEpoch}</code>{" "}
+            <button onClick={() => setCatalogEpoch(undefined)}>
+              Use current publication for new sessions
+            </button>
+          </p>
+        )}
+        {data.capabilities.catalog_workspace === 1 && (
+          <label>
+            New session inputs{" "}
+            <select
+              aria-label="Analytical input mode"
+              value={catalogMode ? "catalog" : "snapshot"}
+              onChange={(e) => setCatalogMode(e.target.value === "catalog")}
+            >
+              <option value="snapshot">Project snapshot</option>
+              <option value="catalog">
+                Catalog publications and bound datasets
+              </option>
+            </select>
+          </label>
+        )}
         <label>
           Snapshot source branch
           <select
             aria-label="Analytics branch"
             value={branch?.id ?? ""}
-            onChange={(e) => onSelect(e.target.value)}
+            onChange={(e) => {
+              setCatalogEpoch(undefined);
+              onSelect(e.target.value);
+            }}
           >
             {data.branches.map((b) => (
               <option key={b.id} value={b.id}>
@@ -236,11 +275,13 @@ export function Analytics({
         </button>
         <button
           className="button primary"
-          disabled={busy || !branch || !snapshot}
+          disabled={busy || !branch || (!snapshot && !catalogMode)}
           onClick={() =>
             branch &&
             void action({
               action: "open",
+              catalog: catalogMode,
+              epoch: catalogMode ? catalogEpoch : undefined,
               target: { branch: branch.id, revision: branch.revision },
               key: crypto.randomUUID(),
             })
@@ -366,6 +407,23 @@ export function Analytics({
                 The active session belongs to a different branch from the
                 snapshot source selection.
               </p>
+            )}
+            {(session.metadata?.catalog || session.metadata?.datasets) && (
+              <details open>
+                <summary>Resolved data inputs</summary>
+                <pre>
+                  {JSON.stringify(
+                    {
+                      catalog: session.metadata.catalog,
+                      datasets: session.metadata.datasets,
+                      shared_source_transaction:
+                        session.metadata.shared_source_transaction,
+                    },
+                    null,
+                    2,
+                  )}
+                </pre>
+              </details>
             )}
             {session.error && <p role="alert">{session.error}</p>}
             <button

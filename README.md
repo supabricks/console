@@ -115,3 +115,15 @@ or supplies a runtime project ID to asset requests.
 `scripts/project-create.mjs` exercises the real browser/runtime creation flow,
 reload and lost-response recovery, project switching and asset isolation. It is
 also part of the installed console qualification suite.
+
+The UC06 **Data** browser uses the platform's publication, dataset and reviewed
+project-apply contracts. It separates live PostgreSQL from snapshots, discovers
+publications only for explicit binding, and hands selected inputs to Spark SQL or
+a saved notebook. It requires the `catalog_workspace: 1` runtime capability.
+
+`node scripts/qualify-catalog.mjs --binary /absolute/installed/bin/supabricks
+--root /absolute/isolated/test-root --report /absolute/report.json` runs the real
+browser workflow against an installed fixture with the managed catalog available.
+The platform's `e2e/native/catalog/console.py` assembles that fixture from pinned
+engines, UC, the current binary and these built assets. Existing browser suites
+remain required alongside this additional workflow.
