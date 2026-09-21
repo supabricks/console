@@ -245,6 +245,12 @@ try {
     (await cli("console", "--no-open", "--project", producer.worktree)).url,
   );
   await dataView();
+  // Wait for the original live-schema observation before changing PostgreSQL.
+  // Refresh data can be enabled before the initial metadata request has rendered.
+  const liveTable = page.locator("details").filter({ hasText: "Live PostgreSQL" });
+  await expect(liveTable.getByRole("button", { name: "Validate public.sales", exact: true }))
+    .toBeEnabled({ timeout: 30000 });
+  await expect(liveTable.locator("li")).toHaveCount(2);
   // A schema/data change creates a new producer publication; consumer remains pinned.
   for (const sql of [
     "ALTER TABLE sales ADD COLUMN note text",
