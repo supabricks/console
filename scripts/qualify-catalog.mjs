@@ -374,7 +374,7 @@ try {
   check("reviewed_unbind_preserves_producer_data");
   const catalogState = await cli("catalog", "service", "status");
   const token = join(root, "unavailable-token");
-  await writeFile(token, "fixture-token", { mode: 0o600 });
+  await writeFile(token, "uc06-unavailable-provider-fixture-token", { mode: 0o600 });
   await cli(
     "catalog",
     "service",
