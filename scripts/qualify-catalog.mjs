@@ -248,6 +248,8 @@ try {
   // Wait for the original live-schema observation before changing PostgreSQL.
   // Refresh data can be enabled before the initial metadata request has rendered.
   const liveTable = page.locator("details").filter({ hasText: "Live PostgreSQL" });
+  await expect(liveTable.locator("summary")).toBeVisible({ timeout: 30000 });
+  await liveTable.locator("summary").click();
   await expect(liveTable.getByRole("button", { name: "Validate public.sales", exact: true }))
     .toBeEnabled({ timeout: 30000 });
   await expect(liveTable.locator("li")).toHaveCount(2);
@@ -266,11 +268,6 @@ try {
       "--project",
       producer.worktree,
     );
-  await page
-    .locator("details")
-    .filter({ hasText: "Live PostgreSQL" })
-    .locator("summary")
-    .click();
   await page
     .locator("details")
     .filter({ hasText: "Live PostgreSQL" })
