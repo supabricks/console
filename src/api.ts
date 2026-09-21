@@ -23,6 +23,7 @@ export interface Overview {
     needs_attention: boolean;
   };
   capabilities: {
+    catalog_workspace?: number;
     project_creation?: number;
     analytical_workspace?: number;
     project_packaging?: number;
@@ -133,11 +134,13 @@ export type EnvironmentIdentity = {
 export type NotebookBinding = {
   branch_id: string;
   epoch_id: string | null;
+  catalog?: boolean;
   environment?: EnvironmentIdentity | null;
 };
 export type NotebookCommand =
   | {
       action: "create";
+      catalog?: boolean;
       key: string;
       target: Target;
       epoch?: string | null;
@@ -158,6 +161,7 @@ export type NotebookCommand =
       key: string;
     };
 export type NotebookContext = {
+  catalog?: boolean;
   id: string;
   environment: EnvironmentIdentity | null;
   environment_operation: string | null;
@@ -519,6 +523,9 @@ export type AnalyticalSession = {
     observed_at_ms: number;
     published_at_ms: number;
     ordinal: number;
+    catalog?: Record<string, unknown>;
+    datasets?: Record<string, unknown>[];
+    shared_source_transaction?: boolean;
   } | null;
   query: AnalyticalQuery | null;
 };
@@ -546,7 +553,13 @@ export type AnalyticalRefresh = {
 };
 export type AnalyticsCommand =
   | { action: "snapshot"; target: Target }
-  | { action: "open" | "refresh"; target: Target; key: string }
+  | {
+      action: "open" | "refresh";
+      target: Target;
+      key: string;
+      catalog?: boolean;
+      epoch?: string;
+    }
   | {
       action:
         | "refresh_status"
@@ -599,6 +612,7 @@ export interface ProjectInspection {
     {
       declaration: {
         kind: string;
+        requirement?: string;
         file?: string;
         database?: string;
         environment?: string;
@@ -650,7 +664,10 @@ export interface ProjectPlan {
   archive_sha256: string;
   content_sha256: string;
   installation: string | null;
-  options: { adopt: Record<string, string> };
+  options: {
+    adopt: Record<string, string>;
+    datasets?: Record<string, DatasetTarget>;
+  };
   previous: string | null;
   steps: ProjectStep[];
   retained: string[];
@@ -683,7 +700,19 @@ export interface ProjectView {
   } | null;
 }
 export type ProjectApplyCommand =
-  | { action: "plan"; options: { adopt: Record<string, string> } }
+  | {
+      action: "dataset_draft";
+      logical: string;
+      requirement: string | null;
+      expected_manifest_sha256: string;
+    }
+  | {
+      action: "plan";
+      options: {
+        adopt: Record<string, string>;
+        datasets?: Record<string, DatasetTarget>;
+      };
+    }
   | { action: "apply"; plan: ProjectPlan; key: string }
   | { action: "find"; key: string }
   | { action: "status" | "cancel"; id: string }
@@ -715,5 +744,48 @@ export async function project<T>(
       { action: "project", source, command },
       130000,
     )
+  ).value;
+}
+
+export type DatasetTarget = {
+  deployment_id: string;
+  provider_id: string;
+  publication_id: string;
+};
+export type Dataset = {
+  target: DatasetTarget;
+  epoch_id: string;
+  branch_id: string;
+  revision: number;
+  schema_sha256: string;
+  content_sha256: string;
+  snapshot_at_ms: number | null;
+  catalog: string;
+  tables: {
+    schema: string;
+    name: string;
+    columns: { name: string; type_text: string; comment?: string }[];
+  }[];
+};
+export type PublicationChoice = {
+  target: DatasetTarget;
+  owner: string;
+  branch: string;
+  branch_id: string;
+  epoch_id: string;
+  revision: number | null;
+  snapshot_at_ms: number | null;
+  state: string;
+  head: boolean;
+  binding_revision: number;
+  table_count: number;
+  needs_attention: boolean;
+};
+export async function catalog<T>(
+  kind: "metadata" | "publication" | "datasets",
+  command: object,
+): Promise<T> {
+  return (
+    await request("workspace", "POST", { action: `catalog_${kind}`, command })
   ).value;
 }

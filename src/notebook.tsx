@@ -26,15 +26,19 @@ const bindingOf = (c: NotebookContext): Provenance => ({
   branch_id: c.branch_id,
   epoch_id: c.epoch_id,
   environment: c.environment,
+  catalog: c.catalog,
 });
 
 export function Notebook({
   visible,
   data,
+  suggestedPath,
 }: {
   visible: boolean;
   data: Overview;
+  suggestedPath?: string | null;
 }) {
+  const [catalogMode, setCatalogMode] = useState(false);
   const host = useRef<HTMLDivElement>(null),
     editor = useRef<DocumentEditor>(null),
     channel = useRef<NotebookChannel>(null);
@@ -217,8 +221,10 @@ export function Notebook({
       instance.load(loaded.document);
       reset(file, loaded.revision);
       const meta = loaded.document.metadata.supabricks as
-        { binding?: Provenance; outputs?: Provenance } | undefined;
+        | { binding?: Provenance; outputs?: Provenance }
+        | undefined;
       setBranch(meta?.binding?.branch_id ?? "");
+      setCatalogMode(meta?.binding?.catalog ?? false);
       setProvenance(meta?.outputs ?? null);
       setMessage("Opened without starting a kernel or running cells.");
     } finally {
@@ -334,13 +340,15 @@ export function Notebook({
     }
     disconnect();
     const saved = editor.current!.model.getMetadata("supabricks") as
-      { binding?: Provenance } | undefined;
+      | { binding?: Provenance }
+      | undefined;
     const epoch =
       !latest && saved?.binding?.branch_id === branch
         ? saved.binding.epoch_id
         : null;
     const created = await notebookLifecycle({
       action: "create",
+      catalog: catalogMode,
       key: crypto.randomUUID(),
       target: { branch: selected.id, revision: selected.revision },
       epoch,
@@ -356,7 +364,8 @@ export function Notebook({
     update(starting);
     const ready = await waitFor(created.id, ["ready"]);
     const metadata = editor.current!.model.getMetadata("supabricks") as
-      Record<string, unknown> | undefined;
+      | Record<string, unknown>
+      | undefined;
     editor.current!.model.setMetadata("supabricks", {
       ...metadata,
       binding: bindingOf(ready),
@@ -410,7 +419,8 @@ export function Notebook({
     );
     const ready = await waitFor(c.id, ["ready"]);
     const metadata = editor.current!.model.getMetadata("supabricks") as
-      Record<string, unknown> | undefined;
+      | Record<string, unknown>
+      | undefined;
     editor.current!.model.setMetadata("supabricks", {
       ...metadata,
       binding: bindingOf(ready),
@@ -441,7 +451,8 @@ export function Notebook({
     const bound = current.current!;
     const binding = bindingOf(bound);
     const metadata = editor.current!.model.getMetadata("supabricks") as
-      Record<string, unknown> | undefined;
+      | Record<string, unknown>
+      | undefined;
     editor.current!.model.setMetadata("supabricks", {
       ...metadata,
       binding,
@@ -517,7 +528,34 @@ export function Notebook({
           </button>
         </div>
       </div>
+      {suggestedPath && path !== suggestedPath && (
+        <p>
+          <button
+            disabled={busy || running}
+            onClick={() => void perform(() => open(suggestedPath))}
+          >
+            Open prepared dataset notebook
+          </button>{" "}
+          · Opens a saved notebook without starting or executing it.
+        </p>
+      )}
       <div className="notebook-toolbar">
+        {data.capabilities.catalog_workspace === 1 && (
+          <label>
+            New kernel inputs{" "}
+            <select
+              aria-label="Notebook input mode"
+              value={catalogMode ? "catalog" : "snapshot"}
+              disabled={busy || running}
+              onChange={(e) => setCatalogMode(e.target.value === "catalog")}
+            >
+              <option value="snapshot">Project snapshot</option>
+              <option value="catalog">
+                Catalog publications and bound datasets
+              </option>
+            </select>
+          </label>
+        )}
         <label>
           Branch{" "}
           <select
@@ -664,6 +702,23 @@ export function Notebook({
             <code>supabricks env prepare</code>, then choose “Use prepared
             environment”. The running kernel keeps its current dependencies.
           </p>
+        )}
+      {context?.epoch &&
+        (context.epoch.catalog || context.epoch.datasets) != null && (
+          <details>
+            <summary>Resolved notebook data inputs</summary>
+            <pre>
+              {JSON.stringify(
+                {
+                  catalog: context.epoch.catalog,
+                  datasets: context.epoch.datasets,
+                  environment: context.environment,
+                },
+                null,
+                2,
+              )}
+            </pre>
+          </details>
         )}
       {typeof context?.epoch?.observed_at_ms === "number" && (
         <p className="subtle">
