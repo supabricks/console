@@ -36,7 +36,13 @@ async function cli(...args) {
     );
   }
 }
-const report = { status: "FAIL", checks: [] };
+const report = {
+  status: "FAIL",
+  checks: [],
+  network:
+    process.env.SUPABRICKS_CONSOLE_NETWORK_EVIDENCE ||
+    "browser restricted to loopback; host network not isolated",
+};
 let browser, page;
 const check = (name) => {
   report.checks.push(name);
@@ -254,7 +260,11 @@ try {
       "--project",
       producer.worktree,
     );
-  await page.locator("details").filter({hasText:"Live PostgreSQL"}).locator("summary").click();
+  await page
+    .locator("details")
+    .filter({ hasText: "Live PostgreSQL" })
+    .locator("summary")
+    .click();
   await page
     .locator("details")
     .filter({ hasText: "Live PostgreSQL" })
@@ -402,6 +412,37 @@ try {
     })
     .toBe(true);
   check("absent_provider_blocks_publication_without_breaking_postgres");
+  // Revision 2 has no readers or bindings after the reviewed removal.
+  const withdrawalPage = await context.newPage();
+  page = withdrawalPage;
+  page.on("pageerror", (e) => errors.push(e.message));
+  page.on("dialog", (d) => d.accept());
+  const producerLaunch = await cli(
+    "console",
+    "--no-open",
+    "--project",
+    producer.worktree,
+  );
+  await page.goto(producerLaunch.url);
+  await dataView();
+  const withdrawal = page
+    .locator(".dataset-card")
+    .filter({ hasText: "Revision 2" });
+  await withdrawal
+    .getByRole("button", { name: "Inspect retention", exact: true })
+    .click();
+  await expect(
+    page.getByText("Retention holders", { exact: true }),
+  ).toBeVisible();
+  await withdrawal
+    .getByRole("button", { name: "Withdraw publication", exact: true })
+    .click();
+  await expect(page.getByLabel("Pending catalog request")).toHaveCount(0, {
+    timeout: 90000,
+  });
+  await expect(withdrawal).toHaveCount(0);
+  expect(errors).toEqual([]);
+  check("confirmed_withdrawal_retires_unreferenced_publication");
   report.status = "PASS";
 } catch (error) {
   report.error = String(error.message).replace(
