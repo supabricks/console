@@ -17,6 +17,10 @@ completeness of the workflows we support. It is not a claim of feature parity.
    priorities and evidence of success.
 3. [User flows](user-flows.md): entry points, decisions, recovery paths and
    completion criteria, traced back to those jobs.
+4. [Page structure](page-structure.md): navigation hierarchy, page inventory,
+   proposed routes, layout responsibilities and state contracts.
+5. [Interactive wireframes](wireframes/README.md): 17 linked page compositions,
+   profile/state controls and guided journeys. Open locally without a build step.
 
 The [platform documentation home](https://github.com/supabricks/platform/blob/main/docs/README.md)
 owns stack architecture, implementation plans, operating instructions and release
@@ -61,6 +65,7 @@ and retain the flow's failure and permission cases. Existing API support does no
 mean a proposed interaction already exists. A new capability needs a platform
 contract before the UI can present it as available.
 
-Next design work: validate the priority journeys with users, prototype the shared
-navigation and authoring model, then split implementation into reviewable slices.
+The page structure and interactive wireframes now provide the first navigation
+and authoring prototype. Next: validate the priority journeys with users, revise
+the prototype, then split implementation into reviewable slices.
 Update these records when research or runtime constraints change a decision.

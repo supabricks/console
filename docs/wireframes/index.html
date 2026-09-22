@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Supabricks · Console wireframes</title>
+    <link rel="stylesheet" href="wireframes.css">
+    <script src="wireframes.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to page content</a>
+    <header class="review-bar" aria-label="Wireframe review controls">
+      <div class="review-title"><strong>SUPABRICKS / WIREFRAMES</strong><span>Structure study 01 · synthetic data</span></div>
+      <label>Screen<select id="screen"></select></label>
+      <label>Profile<select id="profile"><option value="local">Local owner</option><option value="governed">Governed admin</option></select></label>
+      <label>State<select id="state"><option value="ready">Ready</option><option value="loading">Loading</option><option value="empty">Empty</option><option value="error">Error</option><option value="denied">No access</option></select></label>
+      <button id="notes-toggle" aria-expanded="false" aria-controls="design-notes">Notes</button>
+    </header>
+    <div class="journey-bar">
+      <label>Journey<select id="journey"><option value="free">Free exploration</option><option value="first">First result</option><option value="shared">Shared data</option><option value="governance">Governance</option><option value="portable">Portable work</option></select></label>
+      <span id="journey-position">Choose any screen or follow a journey</span>
+      <div><button id="previous" disabled>← Previous</button><button id="next" disabled>Next →</button></div>
+    </div>
+    <div class="application">
+      <aside class="rail" id="rail" aria-label="Application navigation"></aside>
+      <div class="main-column">
+        <header class="topbar" id="topbar"></header>
+        <aside id="design-notes" class="design-notes" hidden></aside>
+        <main id="content" tabindex="-1"></main>
+        <footer class="prototype-footer">DESIGN PROTOTYPE · All content is fictional. Actions simulate outcomes only.</footer>
+      </div>
+    </div>
+    <div id="announcement" class="announcement" role="status" aria-live="polite" hidden></div>
+    <dialog id="dialog" aria-labelledby="dialog-title"></dialog>
+  </body>
+</html>

@@ -13,6 +13,8 @@ Start with the [console product documentation](docs/README.md):
 - [Current state and direction](docs/current-state.md): implemented surfaces, product vocabulary and the Databricks reference.
 - [Jobs to be done](docs/jobs-to-be-done.md): users, desired outcomes, priorities and success measures.
 - [User flows](docs/user-flows.md): connected journeys, decisions, permission boundaries and recovery behavior.
+- [Page structure](docs/page-structure.md): navigation, proposed routes and screen responsibilities.
+- [Interactive wireframes](docs/wireframes/README.md): a standalone, clickable 17-screen structure study with synthetic data.
 
 These documents define the next product experience; proposed interactions are
 distinguished from existing functionality. The

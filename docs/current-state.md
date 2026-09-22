@@ -50,6 +50,8 @@ distinction between local-owner launch sessions and governed OIDC identities.
 ## Proposed information architecture
 
 This is a hypothesis to test through the flows, not a frozen sidebar design.
+The [page structure](page-structure.md) develops it into a screen inventory and
+the [wireframes](wireframes/README.md) make it navigable for review.
 
 | Place | User purpose | Scope |
 | --- | --- | --- |
