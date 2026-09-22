@@ -224,7 +224,9 @@ export function GovernedConsole() {
               ? "Governed console · TLS"
               : "Governed loopback preview"}
           </p>
-          <p>Shared network access is unavailable.</p>
+          {window.location.protocol !== "https:" && (
+            <p>Shared network access is unavailable.</p>
+          )}
         </div>
       </aside>
       <div className="workspace">

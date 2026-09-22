@@ -435,21 +435,31 @@ finally:
     .getByLabel("Run as service principal (optional ID)")
     .fill(serviceId);
   await bob.locator(".governed-datasets input[type=checkbox]").check();
-  let peer;
+  let peer, peerPage;
   if (config.installedQualification) {
-    await tab(alice, "Notebooks");
+    // Project policy revisions deliberately fence every execution in that
+    // project. The independent peer uses its own project and browser page.
+    peerPage = await aliceContext.newPage();
+    peerPage.on("pageerror", (e) => errors.push(String(e)));
+    await peerPage.goto(config.origin + "/auth/v1/console");
+    await peerPage.getByLabel("New project name").fill("independent-peer");
+    await command(peerPage, "Create project", "create_project");
+    await tab(peerPage, "Access");
+    await waitReady(peerPage);
+    await peerPage.getByLabel("Subject ID", { exact: true }).fill(aliceId);
+    await peerPage.getByLabel("Execution grant").selectOption("execute");
+    await command(peerPage, "Grant execution permission", "policy");
+    await tab(peerPage, "Notebooks");
     await waitReady(alice);
-    await alice
-      .getByLabel("Import notebook")
-      .setInputFiles({
-        name: "peer.ipynb",
-        mimeType: "application/json",
-        buffer: Buffer.from(JSON.stringify(notebook)),
-      });
-    await controlButton(alice, "Save source revision", "save_source");
-    await controlButton(alice, "Choose readable datasets", "catalog");
-    await alice.locator(".governed-datasets input[type=checkbox]").check();
-    peer = await controlButton(alice, "Run bound source", "runtime");
+    await peerPage.getByLabel("Import notebook").setInputFiles({
+      name: "peer.ipynb",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(notebook)),
+    });
+    await controlButton(peerPage, "Save source revision", "save_source");
+    await controlButton(peerPage, "Choose readable datasets", "catalog");
+    await peerPage.locator(".governed-datasets input[type=checkbox]").check();
+    peer = await controlButton(peerPage, "Run bound source", "runtime");
   }
   const slow = await controlButton(bob, "Run bound source", "runtime");
   const container = "sb-exec-" + slow.id;
@@ -487,6 +497,7 @@ finally:
     )
     .toBe(true);
   let envelope;
+  const executionMemory = [];
   if (config.installedQualification) {
     for (const id of [peer.id, slow.id]) {
       const { stdout } = await exec("docker", ["inspect", "sb-exec-" + id], {
@@ -500,6 +511,22 @@ finally:
       expect(limits.PidsLimit).toBe(512);
       expect(limits.NetworkMode).toBe("none");
       expect(info.State.Running).toBe(true);
+      const { stdout: memory } = await exec(
+        "docker",
+        [
+          "exec",
+          "sb-exec-" + id,
+          "cat",
+          "/sys/fs/cgroup/memory.current",
+          "/sys/fs/cgroup/memory.peak",
+        ],
+        { timeout: 5000 },
+      );
+      const [current, peak] = memory.trim().split(/\s+/).map(Number);
+      expect(current).toBeGreaterThan(0);
+      expect(peak).toBeGreaterThanOrEqual(current);
+      expect(peak).toBeLessThanOrEqual(limits.Memory);
+      executionMemory.push({ current_bytes: current, peak_bytes: peak });
       envelope = {
         concurrent_executions: 2,
         memory_bytes: limits.Memory,
@@ -541,13 +568,13 @@ finally:
         )
         .toBe(true);
     }
-    const response = alice.waitForResponse(
+    const response = peerPage.waitForResponse(
       (r) =>
         r.url().endsWith("/auth/v1/control") &&
         JSON.parse(r.request().postData()).action === "runtime" &&
         JSON.parse(r.request().postData()).command.action === "start",
     );
-    await alice
+    await peerPage
       .getByRole("button", { name: "Run bound source", exact: true })
       .click();
     expect((await response).status()).toBe(403);
@@ -600,11 +627,9 @@ finally:
       "sb-exec-" + peer.id,
     ]);
     expect(stdout.trim()).toBe("true");
-    await tab(alice, "Notebooks");
-    await waitReady(alice);
-    await controlButton(alice, "Show executions", "executions");
+    await controlButton(peerPage, "Show executions", "executions");
     await controlButton(
-      alice,
+      peerPage,
       "Terminate " + peer.id.slice(0, 8),
       "stop_execution",
     );
@@ -668,6 +693,7 @@ finally:
         checks,
         revocation_observed_ms: closedMs,
         resource_envelope: envelope,
+        execution_memory: executionMemory,
         tls: config.origin.startsWith("https:"),
       },
       null,
