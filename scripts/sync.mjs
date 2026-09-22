@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
 
-export async function qualifySync({ page, cli, checks }) {
+export async function qualifySync({ page, cli, checks, screenshot }) {
   await cli("database", "create", "sync-demo", "--wait");
   await cli(
     "sql",
@@ -10,9 +10,18 @@ export async function qualifySync({ page, cli, checks }) {
     "--sql",
     "CREATE TABLE events(id integer PRIMARY KEY, value integer)",
   );
-  await cli("sql", "--branch", "sync-demo", "--write", "--sql", "INSERT INTO events VALUES(1,10)");
+  await cli(
+    "sql",
+    "--branch",
+    "sync-demo",
+    "--write",
+    "--sql",
+    "INSERT INTO events VALUES(1,10)",
+  );
   await page.reload();
-  await page.getByRole("button", { name: "Database workspace", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Database workspace", exact: true })
+    .click();
   await page.getByRole("button", { name: "Analytics", exact: true }).click();
   await page
     .getByLabel("Analytics branch", { exact: true })
@@ -79,6 +88,20 @@ export async function qualifySync({ page, cli, checks }) {
   await expect(area.locator(".sync-status")).toContainText("healthy");
   checks.push(
     "Sync discovery never enrolls capture; continuous disclosure is required; a lost create response retries the same policy key",
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await expect(
+    area.getByRole("button", { name: "Pause sync", exact: true }),
+  ).toBeVisible();
+  await page.setViewportSize({ width: 1440, height: 960 });
+  if (screenshot) await area.screenshot({ path: screenshot });
+  checks.push(
+    "Active sync metrics and lifecycle controls fit a narrow viewport",
   );
   const first = policy.last_epoch_id;
   await cli(
@@ -149,7 +172,9 @@ export async function qualifySync({ page, cli, checks }) {
   };
   await page.route("**/api/overview", legacy);
   await page.reload();
-  await page.getByRole("button", { name: "Database workspace", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Database workspace", exact: true })
+    .click();
   await page.getByRole("button", { name: "Analytics", exact: true }).click();
   await expect(area).toContainText("does not expose managed sync controls");
   await expect(

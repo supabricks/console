@@ -182,7 +182,7 @@ try {
   checks.push(
     "reload uses authenticated session; repeated CLI launch reuses the bound bridge with a fresh one-use ticket",
   );
-  if (! ["analytics", "sync"].includes(options["--slice"])) {
+  if (!["analytics", "sync"].includes(options["--slice"])) {
     await qualifyWorkspace({
       page,
       context,
@@ -205,16 +205,25 @@ try {
       screenshot: options["--screenshot"],
     });
   }
-  const analyticalReader = options["--slice"] === "sync" ? null : await qualifyAnalytics({
-    page,
-    context,
-    browser,
-    origin,
-    cli,
-    checks,
-    launch,
-  });
-  if (options["--sync"] === "true") await qualifySync({ page, cli, checks });
+  const analyticalReader =
+    options["--slice"] === "sync"
+      ? null
+      : await qualifyAnalytics({
+          page,
+          context,
+          browser,
+          origin,
+          cli,
+          checks,
+          launch,
+        });
+  if (options["--sync"] === "true")
+    await qualifySync({
+      page,
+      cli,
+      checks,
+      screenshot: options["--sync-screenshot"],
+    });
   if (!options["--slice"]) {
     const cliAt = async (at, ...command) => {
       const result = await exec(binary, [...command, "--project", at], {
@@ -300,9 +309,10 @@ try {
   checks.push(
     "whole-cell shutdown and console-driven restart retain branches and issue fresh browser sessions",
   );
-  if (! ["analytics", "sync"].includes(options["--slice"]))
+  if (!["analytics", "sync"].includes(options["--slice"]))
     await verifySavedAfterRestart(page, checks);
-  if (analyticalReader) await verifyAnalyticsAfterRestart(cli, analyticalReader, checks);
+  if (analyticalReader)
+    await verifyAnalyticsAfterRestart(cli, analyticalReader, checks);
   await qualifyProjectCreation({
     context,
     launchHome: async () =>
