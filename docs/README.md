@@ -5,8 +5,8 @@ questions, developing repeatable analysis and governing access. A user should be
 able to complete a task, understand its result and resume it later without needing
 to understand the platform's internal services.
 
-This directory defines the product experience before a visual redesign or
-implementation sequence. The ambition is to rival Databricks in the quality and
+This directory defines the product experience, page structure and proposed
+visual system before production implementation. The ambition is to rival Databricks in the quality and
 completeness of the workflows we support. It is not a claim of feature parity.
 
 ## Read in this order
@@ -21,6 +21,12 @@ completeness of the workflows we support. It is not a claim of feature parity.
    proposed routes, layout responsibilities and state contracts.
 5. [Interactive wireframes](wireframes/README.md): 17 linked page compositions,
    profile/state controls and guided journeys. Open locally without a build step.
+6. [Design system](design-system.md): cool color roles, typography, sizing, buttons,
+   forms, tables, feedback and accessibility targets.
+7. [Visual design reference](design-system/README.md): interactive light/dark and
+   density examples, using the shared tokens and bundled fonts.
+8. [React/TypeScript component architecture](component-architecture.md): proposed
+   reusable APIs, extension points, ownership and migration order.
 
 The [platform documentation home](https://github.com/supabricks/platform/blob/main/docs/README.md)
 owns stack architecture, implementation plans, operating instructions and release
@@ -65,7 +71,8 @@ and retain the flow's failure and permission cases. Existing API support does no
 mean a proposed interaction already exists. A new capability needs a platform
 contract before the UI can present it as available.
 
-The page structure and interactive wireframes now provide the first navigation
-and authoring prototype. Next: validate the priority journeys with users, revise
-the prototype, then split implementation into reviewable slices.
+The page structure, wireframes and design reference now establish the first
+navigation, authoring and visual proposals. Next: review the design direction,
+validate priority journeys with users, and implement the shared React primitives
+and a first product slice.
 Update these records when research or runtime constraints change a decision.

@@ -15,6 +15,8 @@ Start with the [console product documentation](docs/README.md):
 - [User flows](docs/user-flows.md): connected journeys, decisions, permission boundaries and recovery behavior.
 - [Page structure](docs/page-structure.md): navigation, proposed routes and screen responsibilities.
 - [Interactive wireframes](docs/wireframes/README.md): a standalone, clickable 17-screen structure study with synthetic data.
+- [Design system](docs/design-system.md) and [visual reference](docs/design-system/README.md): cool colors, typography, controls, tables, themes and density.
+- [Component architecture](docs/component-architecture.md): reusable React/TypeScript contracts and the path from shared tokens to product components.
 
 These documents define the next product experience; proposed interactions are
 distinguished from existing functionality. The
