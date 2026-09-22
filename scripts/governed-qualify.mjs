@@ -89,7 +89,12 @@ try {
     expect(
       cookies
         .filter((c) => c.name.startsWith("sb_"))
-        .every((c) => c.httpOnly && c.sameSite === "Lax"),
+        .every(
+          (c) =>
+            c.httpOnly &&
+            c.sameSite === "Lax" &&
+            (!config.origin.startsWith("https:") || c.secure),
+        ),
     ).toBe(true);
   }
   expect(
@@ -312,6 +317,40 @@ try {
   // The browser uploads code only; server normalizes notebook outputs and binds its revision.
   await tab(bob, "Notebooks");
   await waitReady(bob);
+  const isolation = config.installedQualification
+    ? `
+import os, socket, errno
+from pathlib import Path
+assert os.geteuid() == 1000
+assert "CapEff:\t0000000000000000" in Path("/proc/self/status").read_text()
+for forbidden in [${JSON.stringify(config.root)}, "/var/run/docker.sock", "/control.sock", "/root/.aws/credentials"]:
+    assert not Path(forbidden).exists()
+try:
+    Path("/product/qualification-write").write_text("denied")
+except OSError:
+    pass
+else:
+    raise AssertionError("product mount was writable")
+for address in [("1.1.1.1",443),("127.0.0.1",${new URL(config.origin).port || 443})]:
+    try:
+        socket.create_connection(address, timeout=1).close()
+    except OSError:
+        pass
+    else:
+        raise AssertionError("sandbox reached external/control network")
+v=os.statvfs("/scratch")
+assert v.f_blocks * v.f_frsize == 512 * 1024 * 1024
+try:
+    with open("/scratch/quota-test", "wb", buffering=0) as f:
+        for _ in range(65): f.write(b"x" * (8*1024*1024))
+except OSError as e:
+    assert e.errno == errno.ENOSPC
+else:
+    raise AssertionError("scratch quota not enforced")
+finally:
+    Path("/scratch/quota-test").unlink(missing_ok=True)
+`
+    : "";
   const notebook = {
     nbformat: 4,
     nbformat_minor: 5,
@@ -322,7 +361,8 @@ try {
         cell_type: "code",
         metadata: {},
         source: [
-          'import time\nassert spark.sql("SELECT sum(id) AS total FROM delta.`/admission/data/' +
+          isolation +
+            'import time\nassert spark.sql("SELECT sum(id) AS total FROM delta.`/admission/data/' +
             pub.tables[0].id +
             '`").collect()[0][0] == 42\nopen("/scratch/uc097-started", "w").write("ready")\ntime.sleep(120)',
         ],
@@ -363,8 +403,19 @@ try {
     .fill(pub.tables.map((t) => t.id).join(","));
   await command(alice, "Review sharing plan", "catalog");
   await command(alice, "Apply reviewed sharing", "catalog");
+  if (config.installedQualification) {
+    await alice.getByLabel("Principal", { exact: true }).selectOption(aliceId);
+    await command(alice, "Review sharing plan", "catalog");
+    await command(alice, "Apply reviewed sharing", "catalog");
+  }
   await tab(alice, "Access");
   await waitReady(alice);
+  if (config.installedQualification) {
+    await alice.getByLabel("Subject ID", { exact: true }).fill(aliceId);
+    await alice.getByLabel("Execution grant").selectOption("execute");
+    await command(alice, "Grant execution permission", "policy");
+    await waitReady(alice);
+  }
   await alice.getByLabel("Subject ID", { exact: true }).fill(serviceId);
   await alice.getByLabel("Project role").selectOption("viewer");
   await controlButton(alice, "Grant project role", "set_role");
@@ -384,6 +435,32 @@ try {
     .getByLabel("Run as service principal (optional ID)")
     .fill(serviceId);
   await bob.locator(".governed-datasets input[type=checkbox]").check();
+  let peer, peerPage;
+  if (config.installedQualification) {
+    // Project policy revisions deliberately fence every execution in that
+    // project. The independent peer uses its own project and browser page.
+    peerPage = await aliceContext.newPage();
+    peerPage.on("pageerror", (e) => errors.push(String(e)));
+    await peerPage.goto(config.origin + "/auth/v1/console");
+    await peerPage.getByLabel("New project name").fill("independent-peer");
+    await command(peerPage, "Create project", "create_project");
+    await tab(peerPage, "Access");
+    await waitReady(peerPage);
+    await peerPage.getByLabel("Subject ID", { exact: true }).fill(aliceId);
+    await peerPage.getByLabel("Execution grant").selectOption("execute");
+    await command(peerPage, "Grant execution permission", "policy");
+    await tab(peerPage, "Notebooks");
+    await waitReady(alice);
+    await peerPage.getByLabel("Import notebook").setInputFiles({
+      name: "peer.ipynb",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(notebook)),
+    });
+    await controlButton(peerPage, "Save source revision", "save_source");
+    await controlButton(peerPage, "Choose readable datasets", "catalog");
+    await peerPage.locator(".governed-datasets input[type=checkbox]").check();
+    peer = await controlButton(peerPage, "Run bound source", "runtime");
+  }
   const slow = await controlButton(bob, "Run bound source", "runtime");
   const container = "sb-exec-" + slow.id;
   // Read-only qualification probe: prove the cell read its admitted data and
@@ -419,6 +496,97 @@ try {
       { timeout: 90000 },
     )
     .toBe(true);
+  let envelope;
+  const executionMemory = [];
+  if (config.installedQualification) {
+    for (const id of [peer.id, slow.id]) {
+      const { stdout } = await exec("docker", ["inspect", "sb-exec-" + id], {
+        timeout: 5000,
+      });
+      const info = JSON.parse(stdout)[0],
+        limits = info.HostConfig;
+      expect(limits.Memory).toBe(2147483648);
+      expect(limits.MemorySwap).toBe(2147483648);
+      expect(limits.NanoCpus).toBe(2000000000);
+      expect(limits.PidsLimit).toBe(512);
+      expect(limits.NetworkMode).toBe("none");
+      expect(info.State.Running).toBe(true);
+      const { stdout: memory } = await exec(
+        "docker",
+        [
+          "exec",
+          "sb-exec-" + id,
+          "cat",
+          "/sys/fs/cgroup/memory.current",
+          "/sys/fs/cgroup/memory.peak",
+        ],
+        { timeout: 5000 },
+      );
+      const [current, peak] = memory.trim().split(/\s+/).map(Number);
+      expect(current).toBeGreaterThan(0);
+      expect(peak).toBeGreaterThanOrEqual(current);
+      expect(peak).toBeLessThanOrEqual(limits.Memory);
+      executionMemory.push({ current_bytes: current, peak_bytes: peak });
+      envelope = {
+        concurrent_executions: 2,
+        memory_bytes: limits.Memory,
+        cpu_count: 2,
+        pids: limits.PidsLimit,
+        scratch_bytes: 536870912,
+      };
+      await expect
+        .poll(
+          async () => {
+            try {
+              return (
+                (
+                  await exec(
+                    "docker",
+                    [
+                      "exec",
+                      "sb-exec-" + id,
+                      "/tools/runsc",
+                      "--root=/work/runsc",
+                      "--network=none",
+                      "--platform=systrap",
+                      "--ignore-cgroups",
+                      "--sidecar-usage-policy=STRICT",
+                      "exec",
+                      "lease",
+                      "/bin/cat",
+                      "/scratch/uc097-started",
+                    ],
+                    { timeout: 5000 },
+                  )
+                ).stdout === "ready"
+              );
+            } catch {
+              return false;
+            }
+          },
+          { timeout: 60000 },
+        )
+        .toBe(true);
+    }
+    const response = peerPage.waitForResponse(
+      (r) =>
+        r.url().endsWith("/auth/v1/control") &&
+        JSON.parse(r.request().postData()).action === "runtime" &&
+        JSON.parse(r.request().postData()).command.action === "start",
+    );
+    await peerPage
+      .getByRole("button", { name: "Run bound source", exact: true })
+      .click();
+    expect((await response).status()).toBe(403);
+    checks.push("concurrent_execution_limit_and_measured_cgroups");
+    checks.push("sandbox_bypass_and_scratch_quota_denied");
+    await tab(alice, "Access");
+    await waitReady(alice);
+    await alice.getByLabel("Subject ID", { exact: true }).fill(bobId);
+    await alice.getByLabel("Execution grant").selectOption("act_as");
+    await alice.getByLabel("Effective service principal").fill(serviceId);
+    await alice.getByLabel("Exact source revision").fill(slowSource.revision);
+  }
   await command(alice, "Revoke execution permission", "policy");
   const revokedAt = Date.now();
   checks.push("source_pinned_service_use_from_browser");
@@ -451,6 +619,22 @@ try {
     .toBe(true);
   const closedMs = Date.now() - revokedAt;
   checks.push("revocation_during_bound_notebook_execution");
+  if (config.installedQualification) {
+    const { stdout } = await exec("docker", [
+      "inspect",
+      "--format",
+      "{{.State.Running}}",
+      "sb-exec-" + peer.id,
+    ]);
+    expect(stdout.trim()).toBe("true");
+    await controlButton(peerPage, "Show executions", "executions");
+    await controlButton(
+      peerPage,
+      "Terminate " + peer.id.slice(0, 8),
+      "stop_execution",
+    );
+    checks.push("revocation_preserves_independent_peer_execution");
+  }
   // Crafted requests never inherit the operator socket's authority.
   const forged = await bob.evaluate(async () => {
     const s = await (await fetch("/auth/v1/context")).json();
@@ -508,6 +692,9 @@ try {
         status: "PASS",
         checks,
         revocation_observed_ms: closedMs,
+        resource_envelope: envelope,
+        execution_memory: executionMemory,
+        tls: config.origin.startsWith("https:"),
       },
       null,
       2,

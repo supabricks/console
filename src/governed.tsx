@@ -153,7 +153,9 @@ export function GovernedConsole() {
           <p role="status">Connecting…</p>
         )}
         <p className="muted">
-          Private loopback preview. Shared network access is unavailable.
+          {window.location.protocol === "https:"
+            ? "Sign in with your organization’s identity provider."
+            : "Private loopback preview. Shared network access is unavailable."}
         </p>
         <button className="text-button" onClick={() => void refreshSession()}>
           Reconnect
@@ -217,8 +219,14 @@ export function GovernedConsole() {
           </form>
         )}
         <div className="sidebar-bottom">
-          <p>Governed loopback preview</p>
-          <p>Shared network access is unavailable.</p>
+          <p>
+            {window.location.protocol === "https:"
+              ? "Governed console · TLS"
+              : "Governed loopback preview"}
+          </p>
+          {window.location.protocol !== "https:" && (
+            <p>Shared network access is unavailable.</p>
+          )}
         </div>
       </aside>
       <div className="workspace">
