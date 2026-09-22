@@ -23,6 +23,11 @@ export interface Overview {
     needs_attention: boolean;
   };
   capabilities: {
+    sync_controls?: number;
+    managed_snapshot_scheduling?: boolean;
+    incremental_triggered?: boolean;
+    continuous_sync?: boolean;
+    sync_event_triggers?: boolean;
     catalog_workspace?: number;
     project_creation?: number;
     analytical_workspace?: number;
@@ -552,6 +557,7 @@ export type AnalyticalRefresh = {
   epoch_id: string | null;
 };
 export type AnalyticsCommand =
+  | { action: "managed_snapshots"; command: import("./sync").SyncCommand }
   | { action: "snapshot"; target: Target }
   | {
       action: "open" | "refresh";

@@ -1,3 +1,4 @@
+import { SyncPanel, localSync } from "./sync";
 import type { DataHandoff } from "./data";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -208,8 +209,8 @@ export function Analytics({
           <span className="eyebrow">ANALYTICS · SPARK SQL</span>
           <h1>Query a published snapshot.</h1>
           <p>
-            Sail reads immutable Delta tables. PostgreSQL changes appear after
-            an explicit refresh and a new session.
+            Sail reads a fixed publication. Managed sync publishes new epochs;
+            open a new session explicitly to read newer data.
           </p>
         </div>
       </div>
@@ -294,6 +295,15 @@ export function Analytics({
           types block publication; no tables are silently skipped.
         </p>
       </div>
+      {branch && (
+        <SyncPanel
+          key={`${data.project.id}:${branch.id}:${data.runtime.generation}`}
+          scope={`${data.project.id}:${branch.id}`}
+          branch={branch.id}
+          capabilities={data.capabilities}
+          request={localSync}
+        />
+      )}
       <div className="panel analytics-snapshot">
         <h2>Latest publication</h2>
         {snapshot ? (
