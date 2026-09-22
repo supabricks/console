@@ -1,0 +1,169 @@
+/* Supabricks console foundations. Scope every consumer inside .sb-theme.
+   This file is not yet imported by the production console. */
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("./fonts/IBMPlexSans-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("./fonts/IBMPlexSans-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("./fonts/IBMPlexSans-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("./fonts/IBMPlexMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+.sb-theme {
+  color-scheme: light;
+  --sb-canvas: #f4f7fb;
+  --sb-surface: #ffffff;
+  --sb-surface-subtle: #eef3f8;
+  --sb-surface-hover: #e7edf6;
+  --sb-text: #14243a;
+  --sb-text-secondary: #50647e;
+  --sb-text-tertiary: #586d86;
+  --sb-border: #d5dfea;
+  --sb-border-control: #75879f;
+  --sb-primary: #2455d6;
+  --sb-primary-hover: #1e46b7;
+  --sb-primary-active: #193a96;
+  --sb-on-primary: #ffffff;
+  --sb-selection: #eaf0ff;
+  --sb-selection-text: #214cb8;
+  --sb-accent: #087f9b;
+  --sb-accent-soft: #e5f6fb;
+  --sb-accent-text: #07637a;
+  --sb-success: #16745c;
+  --sb-success-soft: #e8f5ef;
+  --sb-warning: #8b5700;
+  --sb-warning-soft: #fff4dd;
+  --sb-danger: #b4233b;
+  --sb-danger-hover: #961c31;
+  --sb-danger-soft: #fff0f2;
+  --sb-on-danger: #ffffff;
+  --sb-info: #1f55b5;
+  --sb-info-soft: #ebf2ff;
+  --sb-focus: #2455d6;
+  --sb-disabled-bg: #e7edf4;
+  --sb-disabled-text: #63748a;
+  --sb-chart-1: #2455d6;
+  --sb-chart-2: #087f9b;
+  --sb-chart-3: #7150c8;
+  --sb-chart-4: #43746d;
+  --sb-overlay: #08142680;
+  --sb-shadow-sm: 0 1px 3px #162b4912;
+  --sb-shadow-popover: 0 12px 32px #14243a24;
+  --sb-font-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sb-font-code: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --sb-text-xs: .75rem;
+  --sb-text-sm: .8125rem;
+  --sb-text-md: .875rem;
+  --sb-text-lg: 1rem;
+  --sb-title-section: 1.125rem;
+  --sb-title-page: 1.75rem;
+  --sb-title-display: 2.25rem;
+  --sb-leading-xs: 1rem;
+  --sb-leading-sm: 1.25rem;
+  --sb-leading-md: 1.25rem;
+  --sb-leading-lg: 1.5rem;
+  --sb-leading-section: 1.5rem;
+  --sb-leading-page: 2.25rem;
+  --sb-leading-display: 2.75rem;
+  --sb-weight-regular: 400;
+  --sb-weight-medium: 500;
+  --sb-weight-semibold: 600;
+  --sb-space-1: .25rem;
+  --sb-space-2: .5rem;
+  --sb-space-3: .75rem;
+  --sb-space-4: 1rem;
+  --sb-space-5: 1.25rem;
+  --sb-space-6: 1.5rem;
+  --sb-space-8: 2rem;
+  --sb-space-10: 2.5rem;
+  --sb-space-12: 3rem;
+  --sb-radius-sm: .25rem;
+  --sb-radius-control: .375rem;
+  --sb-radius-panel: .5rem;
+  --sb-radius-dialog: .75rem;
+  --sb-control-sm: 2rem;
+  --sb-control-md: 2.25rem;
+  --sb-control-lg: 2.75rem;
+  --sb-table-row: 2.75rem;
+  --sb-table-header: 2.25rem;
+  --sb-table-padding: .75rem;
+  --sb-table-font: var(--sb-text-md);
+  --sb-z-sticky: 10;
+  --sb-z-popover: 20;
+  --sb-z-toast: 40;
+  --sb-duration-fast: 100ms;
+  --sb-duration-normal: 160ms;
+  --sb-ease: cubic-bezier(.2, 0, 0, 1);
+}
+.sb-theme[data-sb-theme="dark"] {
+  color-scheme: dark;
+  --sb-canvas: #0b1220;
+  --sb-surface: #121e30;
+  --sb-surface-subtle: #18283d;
+  --sb-surface-hover: #22344c;
+  --sb-text: #e8f0fa;
+  --sb-text-secondary: #a1b4cd;
+  --sb-text-tertiary: #93a8c4;
+  --sb-border: #31445d;
+  --sb-border-control: #7186a4;
+  --sb-primary: #91b2ff;
+  --sb-primary-hover: #b3caff;
+  --sb-primary-active: #c7d8ff;
+  --sb-on-primary: #0a1938;
+  --sb-selection: #23375a;
+  --sb-selection-text: #bdd1ff;
+  --sb-accent: #60cee4;
+  --sb-accent-soft: #123944;
+  --sb-accent-text: #86e2f0;
+  --sb-success: #73d6b0;
+  --sb-success-soft: #12362e;
+  --sb-warning: #ffd180;
+  --sb-warning-soft: #3c301a;
+  --sb-danger: #ff9eaf;
+  --sb-danger-hover: #ffc0ca;
+  --sb-danger-soft: #432331;
+  --sb-on-danger: #3a0b18;
+  --sb-info: #a6c5ff;
+  --sb-info-soft: #1d3152;
+  --sb-focus: #91b2ff;
+  --sb-disabled-bg: #24334a;
+  --sb-disabled-text: #a0b1c8;
+  --sb-chart-1: #91b2ff;
+  --sb-chart-2: #60cee4;
+  --sb-chart-3: #b5a0f2;
+  --sb-chart-4: #73d6b0;
+  --sb-overlay: #020712b3;
+  --sb-shadow-sm: 0 1px 3px #00000030;
+  --sb-shadow-popover: 0 16px 40px #00000066;
+}
+.sb-theme[data-sb-density="compact"] {
+  --sb-table-row: 2rem;
+  --sb-table-header: 2rem;
+  --sb-table-padding: .5rem;
+  --sb-table-font: var(--sb-text-sm);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sb-theme {
+    --sb-duration-fast: 0ms;
+    --sb-duration-normal: 0ms;
+  }
+}

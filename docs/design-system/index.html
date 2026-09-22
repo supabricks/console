@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Supabricks · Design system</title>
+  <link rel="stylesheet" href="../../src/ui/tokens.css">
+  <link rel="stylesheet" href="reference.css">
+  <script src="reference.js" defer></script>
+</head>
+<body class="sb-theme" data-sb-theme="light" data-sb-density="comfortable">
+  <a class="ds-skip" href="#main">Skip to design reference</a>
+  <header class="ds-topbar">
+    <a href="#main" class="ds-brand"><span class="ds-mark" aria-hidden="true">▥</span>supabricks<span class="ds-brand-dot">.</span></a>
+    <span class="ds-version">DESIGN SYSTEM <span>0.1</span></span>
+    <div class="ds-settings">
+      <label>Theme<select id="theme"><option value="light">Light</option><option value="dark">Dark</option></select></label>
+      <label>Density<select id="density"><option value="comfortable">Comfortable</option><option value="compact">Compact</option></select></label>
+    </div>
+  </header>
+  <div class="ds-layout">
+    <aside class="ds-sidebar">
+      <p class="ds-eyebrow">Foundations</p>
+      <nav aria-label="Design reference sections">
+        <a href="#direction">Overview <span>01</span></a>
+        <a href="#color">Color <span>02</span></a>
+        <a href="#typography">Typography <span>03</span></a>
+        <a href="#controls">Buttons & inputs <span>04</span></a>
+        <a href="#tables">Tables <span>05</span></a>
+        <a href="#feedback">Feedback <span>06</span></a>
+        <a href="#composition">In context <span>07</span></a>
+        <a href="#components">Component model <span>08</span></a>
+      </nav>
+      <div class="ds-sidebar-note"><span class="ds-status ds-status-info">Design proposal</span><p>A working reference for the next console. All examples use synthetic data.</p><a href="../wireframes/index.html">Page wireframes ↗</a></div>
+    </aside>
+    <main id="main" tabindex="-1">
+      <section id="direction" class="ds-section ds-hero">
+        <div><p class="ds-eyebrow">THE CONSOLE / A VISUAL FOUNDATION</p><h1>Clarity for<br>serious data work.</h1><p class="ds-intro">Cool surfaces. Precise typography. A consistent language for everything from a first query to a governed workspace.</p><div class="ds-inline ds-hero-actions"><a class="ds-btn ds-btn-primary" href="#composition">See it in context <span aria-hidden="true">↗</span></a><a class="ds-btn ds-btn-secondary" href="../design-system.md">Read specification</a></div></div>
+        <div class="ds-hero-study" aria-label="Palette and type direction"><div class="ds-study-top"><span class="ds-eyebrow">SUPABRICKS PALETTE</span><span class="ds-status ds-status-neutral">Cool / precise</span></div><div class="ds-color-bands" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div><div class="ds-study-type"><span class="ds-study-aa">Aa</span><div><strong>IBM Plex Sans</strong><p>Interface, labels & data</p><code>IBM Plex Mono</code></div></div><div class="ds-study-bottom"><span>14px body · 4px rhythm</span><span>Light + dark</span></div></div>
+      </section>
+
+      <section id="color" class="ds-section">
+        <div class="ds-section-heading"><div><p class="ds-eyebrow">02 / COLOR</p><h2>A cool palette with a purpose.</h2></div><p>Semantic roles keep every surface, action and state consistent. Cyan is an accent; cobalt owns the primary action.</p></div>
+        <div id="swatches" class="ds-swatches"></div>
+        <div class="ds-card ds-semantic-card"><div><h3>Operational meaning</h3><p class="ds-caption">Status uses a label and symbol, never color alone.</p></div><div class="ds-inline"><span class="ds-status ds-status-success">✓ Ready</span><span class="ds-status ds-status-info">◷ Running</span><span class="ds-status ds-status-warning">! Needs attention</span><span class="ds-status ds-status-danger">× Failed</span><span class="ds-status ds-status-neutral">○ Stopped</span></div></div>
+        <p class="ds-caption" id="contrast-summary"></p>
+      </section>
+
+      <section id="typography" class="ds-section">
+        <div class="ds-section-heading"><div><p class="ds-eyebrow">03 / TYPOGRAPHY</p><h2>A readable, technical voice.</h2></div><p>Plex Sans keeps dense interfaces legible. Plex Mono separates source, identifiers and exact values from ordinary language.</p></div>
+        <div class="ds-type-grid"><div class="ds-card ds-type-specimen"><span class="ds-eyebrow">INTERFACE / IBM PLEX SANS</span><div class="ds-type-large">Data.<br>With context.</div><p>Projects, notebooks, queries and the details that make a result trustworthy.</p><div class="ds-type-weights"><span>Regular 400</span><span>Medium 500</span><span>Semibold 600</span></div><p class="ds-caption">Locally hosted · no runtime font CDN</p></div><div class="ds-card ds-scale"><div><span class="ds-page-title">Revenue exploration</span><code>28 / 36 · 600</code></div><div><span class="ds-section-title">Published datasets</span><code>18 / 24 · 600</code></div><div><span class="ds-body-lg">A known version for every result.</span><code>16 / 24 · 400</code></div><div><span class="ds-body">Review inputs before running a query.</span><code>14 / 20 · 400</code></div><div><span class="ds-dense">orders · 12,480 rows · 4 columns</span><code>13 / 20 · 400</code></div><div><span class="ds-caption">Published today at 09:30 UTC</span><code>12 / 16 · 400</code></div><div><code class="ds-code-sample">SELECT region, SUM(amount)</code><code>Mono 13 / 20</code></div></div></div>
+        <div class="ds-rhythm"><span class="ds-eyebrow">SPACING RHYTHM</span><div id="spacing-samples"></div><p class="ds-caption">6px controls · 8px panels · 12px dialogs. Structure comes from spacing, not a card around every label.</p></div>
+      </section>
+
+      <section id="controls" class="ds-section">
+        <div class="ds-section-heading"><div><p class="ds-eyebrow">04 / ACTIONS & INPUTS</p><h2>One clear next action.</h2></div><p>Consistent sizing and predictable states. Keep Run separate from Save; labels describe consequences.</p></div>
+        <div class="ds-two-up"><div class="ds-card ds-pad"><h3>Action hierarchy</h3><p class="ds-caption">Default height 36px · 14px medium · 6px radius</p><div class="ds-button-row"><button class="ds-btn ds-btn-primary" data-action="run">▷ Run query</button><button class="ds-btn ds-btn-secondary" data-action="save">Save query</button><button class="ds-btn ds-btn-ghost" data-action="details">View details</button><button class="ds-btn ds-btn-danger" data-action="delete">Delete branch</button></div><hr><h3>Sizes</h3><div class="ds-button-row"><button class="ds-btn ds-btn-secondary ds-btn-sm" data-action="sample">Small · 32</button><button class="ds-btn ds-btn-secondary" data-action="sample">Default · 36</button><button class="ds-btn ds-btn-primary ds-btn-lg" data-action="sample">Prominent · 44</button><button class="ds-btn ds-btn-secondary ds-icon-btn" data-action="copy" aria-label="Copy sample query"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.75"/><path d="M13 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.75"/></svg></button></div><hr><h3>State vocabulary</h3><div class="ds-button-row"><button class="ds-btn ds-btn-primary ds-demo-hover" data-action="sample">Hover</button><button class="ds-btn ds-btn-primary ds-demo-active" data-action="sample">Pressed</button><button class="ds-btn ds-btn-secondary ds-demo-focus" data-action="sample">Focus ring</button><button class="ds-btn" disabled>Unavailable</button><button class="ds-btn ds-btn-primary" aria-busy="true" disabled><span class="ds-spinner" aria-hidden="true"></span>Running…</button></div><p class="ds-caption">Disabled example: a branch must be selected. Busy preserves the action's place and label.</p><p class="ds-action-note" id="action-note" role="status">Try Run query to preview an in-progress state.</p></div>
+        <form class="ds-card ds-pad" id="sample-form" novalidate><h3>Fields with useful context</h3><p class="ds-caption">Labels persist. Errors stay close to the input.</p><div class="ds-field"><label for="project-name">Project name <span class="ds-required">(required)</span></label><input id="project-name" name="projectName" placeholder="e.g. Sales analytics" aria-describedby="project-hint project-error" required><p class="ds-caption" id="project-hint">Choose a name that other project members will recognize.</p><p class="ds-field-error" id="project-error" hidden>Enter a project name.</p></div><div class="ds-field"><label for="source-branch">Source branch</label><select id="source-branch"><option>main</option><option>pricing-experiment</option></select></div><div class="ds-field"><label for="destination">Destination</label><input id="destination" value="On this installation" readonly aria-describedby="destination-hint"><p class="ds-caption" id="destination-hint">Read-only context is still readable and selectable.</p></div><label class="ds-check"><input type="checkbox" checked>Include an example notebook</label><div class="ds-form-actions"><button type="reset" class="ds-btn ds-btn-secondary">Reset</button><button type="submit" class="ds-btn ds-btn-primary">Create sample project</button></div><p class="ds-caption" id="form-result" role="status"></p></form></div>
+      </section>
+
+      <section id="tables" class="ds-section">
+        <div class="ds-section-heading"><div><p class="ds-eyebrow">05 / TABLES</p><h2>Dense information. Clear decisions.</h2></div><p>Text aligns left, quantities align right. Subtle dividers, explicit selection and bounded output do the work.</p></div>
+        <div class="ds-card ds-data-card"><div class="ds-table-toolbar"><div><h3>Published datasets <span class="ds-count" id="table-count">6</span></h3><p class="ds-caption">Sales analytics / catalog</p></div><div class="ds-inline"><label class="ds-filter-label" for="filter">Filter datasets<input id="filter" type="search" placeholder="Filter by name…"></label><button class="ds-btn ds-btn-secondary" id="clear-filter">Clear</button></div></div><div class="ds-selection-bar" id="selection-bar" hidden><span id="selection-label">0 selected</span><button class="ds-btn ds-btn-ghost ds-btn-sm" id="clear-selection">Clear selection</button></div><div class="ds-table-scroll" tabindex="0" role="region" aria-label="Published datasets table"><table class="ds-table" id="datasets-table"><caption class="ds-sr-only">Synthetic published datasets. Sort by dataset name or rows.</caption><thead><tr><th class="ds-check-cell"><label class="ds-check-target"><input type="checkbox" id="select-all" aria-label="Select all visible datasets"></label></th><th aria-sort="ascending"><button class="ds-sort" data-sort="name">Dataset <span aria-hidden="true">↑</span></button></th><th>Status</th><th class="ds-numeric" aria-sort="none"><button class="ds-sort" data-sort="rows">Rows <span aria-hidden="true">↕</span></button></th><th>Published</th><th>Owner</th><th><span class="ds-sr-only">Actions</span></th></tr></thead><tbody id="dataset-rows"></tbody></table><div class="ds-table-empty" id="table-empty" hidden><h3>No matching datasets</h3><p>Try another name or clear the filter.</p></div></div><div class="ds-table-footer"><span id="table-range">1–6 of 6 sample datasets</span><span>Bounded example · no server pagination</span></div></div>
+        <div class="ds-two-up ds-table-notes"><div class="ds-card ds-pad"><h3>Values are not interchangeable.</h3><div class="ds-value-examples"><span class="ds-null" aria-label="SQL null">NULL</span><code aria-label="Empty string">""</code><span>0</span><span class="ds-skeleton-cell" role="img" aria-label="Loading value"></span></div><p class="ds-caption">Null, empty string, zero and unknown/loading each have a distinct representation.</p></div><div class="ds-card ds-pad"><h3>Density is a user preference.</h3><p class="ds-caption">Comfortable: 44px rows / 14px text.<br>Compact: 32px rows / 13px text.<br>Line height stays 20px. Long content can grow the row.</p></div></div>
+      </section>
+
+      <section id="feedback" class="ds-section">
+        <div class="ds-section-heading"><div><p class="ds-eyebrow">06 / FEEDBACK</p><h2>State that tells you what to do.</h2></div><p>Use inline context for durable outcomes. Toasts acknowledge an action; they never own the only copy of an important result.</p></div>
+        <div class="ds-two-up"><div class="ds-stack"><div class="ds-banner ds-banner-info"><span aria-hidden="true">i</span><div><strong>A newer snapshot is available</strong><p>This session remains pinned to 09:30 until you choose new inputs.</p></div></div><div class="ds-banner ds-banner-success"><span aria-hidden="true">✓</span><div><strong>Import complete</strong><p>12,480 rows are available in public.orders.</p></div></div><div class="ds-banner ds-banner-warning"><span aria-hidden="true">!</span><div><strong>Environment preparation needed</strong><p>Saved declarations differ from the environment used by this kernel.</p></div></div><div class="ds-banner ds-banner-danger"><span aria-hidden="true">×</span><div><strong>Publication could not be confirmed</strong><p>Check the existing operation before submitting another change.</p></div></div></div><div class="ds-card ds-empty"><div class="ds-empty-icon" aria-hidden="true">▤</div><h3>Your first dataset starts here.</h3><p>Bring in a file, review its schema and open the resulting table in SQL.</p><button class="ds-btn ds-btn-primary" data-action="import">Import a sample</button><a href="../wireframes/index.html#import?profile=local&state=ready">Explore the import flow →</a></div></div>
+      </section>
+
+      <section id="composition" class="ds-section">
+        <div class="ds-section-heading"><div><p class="ds-eyebrow">07 / IN CONTEXT</p><h2>One language across the workspace.</h2></div><p>Navigation, source, controls and results share a system. The working content gets the most space.</p></div>
+        <div class="ds-console"><aside class="ds-console-rail"><span class="ds-brand">supabricks<span class="ds-brand-dot">.</span></span><p class="ds-eyebrow">SALES ANALYTICS</p><a href="../wireframes/index.html#workspace">Workspace</a><a href="../wireframes/index.html#data">Data</a><a href="#composition" aria-current="page">SQL editor</a><a href="../wireframes/index.html#notebook">Notebooks</a><a href="../wireframes/index.html#activity">Activity</a><hr><a href="../wireframes/index.html#environment">Environment</a></aside><div class="ds-console-work"><div class="ds-console-header"><div><span class="ds-caption">Sales analytics / Queries</span><h3>Revenue by region</h3></div><div class="ds-inline"><button class="ds-btn ds-btn-secondary ds-btn-sm" data-action="save">Save</button><button class="ds-btn ds-btn-primary ds-btn-sm" data-action="run">▷ Run</button></div></div><div class="ds-context"><span>PostgreSQL</span><span>Branch <strong>main</strong></span><span class="ds-status ds-status-info">Live data</span><span>Read only</span></div><div class="ds-console-code" aria-label="Example SQL source"><span class="ds-lines" aria-hidden="true">1<br>2<br>3</span><pre><span class="ds-syntax-keyword">SELECT</span> region, <span class="ds-syntax-function">SUM</span>(amount) <span class="ds-syntax-keyword">AS</span> revenue
+<span class="ds-syntax-keyword">FROM</span> public.orders
+<span class="ds-syntax-keyword">GROUP BY</span> region;</pre></div><div class="ds-results-bar"><strong>Results</strong><span class="ds-status ds-status-success">✓ Complete</span><span>3 rows · illustrative output</span></div><div class="ds-table-scroll"><table class="ds-table"><caption class="ds-sr-only">Example SQL results</caption><thead><tr><th>region</th><th class="ds-numeric">revenue</th></tr></thead><tbody><tr><td>North</td><td class="ds-numeric">12,400.00</td></tr><tr><td>West</td><td class="ds-numeric">10,600.00</td></tr><tr><td>South</td><td class="ds-numeric">8,200.00</td></tr></tbody></table></div></div></div>
+      </section>
+
+      <section id="components" class="ds-section">
+        <div class="ds-section-heading"><div><p class="ds-eyebrow">08 / REUSABLE COMPONENTS</p><h2>Tokens first. Typed composition next.</h2></div><p>UI primitives own presentation and interaction. Features own authorization, server state and domain decisions.</p></div>
+        <div class="ds-layer-grid"><div class="ds-card ds-pad"><span class="ds-status ds-status-info">Present</span><h3>Foundations</h3><p>Semantic tokens<br>Local font assets<br>Themes and density</p><a href="../../src/ui/tokens.css">View tokens →</a></div><div class="ds-card ds-pad"><span class="ds-status ds-status-neutral">Next</span><h3>Primitives</h3><p>Button · Field · Input<br>Badge · Checkbox<br>IconButton · Text</p></div><div class="ds-card ds-pad"><span class="ds-status ds-status-neutral">Then</span><h3>Composites</h3><p>DataTable · Dialog<br>Tabs · Menu · Inspector<br>AppShell · Toolbar</p></div><div class="ds-card ds-pad"><span class="ds-status ds-status-neutral">Domain layer</span><h3>Product patterns</h3><p>QueryResults<br>PublicationReview<br>NotebookContextBar</p></div></div><div class="ds-contract-example"><pre>&lt;Button variant="primary" busy={running} onClick={runQuery}&gt;
+  Run query
+&lt;/Button&gt;</pre><div><strong>Small, explicit contracts.</strong><p>Native attributes and refs. Controlled state. Semantic variants. No API requests hidden inside visual components.</p><a href="../component-architecture.md">Read React / TypeScript contracts →</a></div></div>
+      </section>
+      <footer class="ds-footer"><span>Supabricks Console · Design proposal 0.1</span><span>Shared tokens · Self-hosted Plex · Synthetic examples</span></footer>
+    </main>
+  </div>
+  <dialog class="ds-dialog" id="dialog" aria-labelledby="dialog-title"><div id="dialog-body"></div></dialog>
+  <div class="ds-toast" id="toast" role="status" hidden></div>
+</body>
+</html>
