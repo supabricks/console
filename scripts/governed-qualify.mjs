@@ -652,10 +652,18 @@ finally:
   expect(forged).toBe(403);
   checks.push("crafted_administration_denied");
   await tab(alice, "Audit");
-  let auditPage = await command(alice, "Refresh audit", "audit");
+  async function auditCommand(button) {
+    // Mount loads the first page automatically. Wait for it to render before
+    // observing a manual request, and consume each rendered cursor in order.
+    await expect(alice.getByRole("button", { name: button, exact: true })).toBeEnabled();
+    const value = await command(alice, button, "audit");
+    await expect(alice.locator("pre.governed-result")).toHaveText(JSON.stringify(value, null, 2));
+    return value;
+  }
+  let auditPage = await auditCommand("Refresh audit");
   const events = [...auditPage.events];
   for (let i = 0; i < 10 && auditPage.events.length; i++) {
-    auditPage = await command(alice, "Next audit page", "audit");
+    auditPage = await auditCommand("Next audit page");
     events.push(...auditPage.events);
   }
   const audit = events.map((v) => v.event);

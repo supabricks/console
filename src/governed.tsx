@@ -1447,13 +1447,21 @@ function Administration() {
 }
 function Audit() {
   const [page, setPage] = useState<Json | null>(null),
-    [error, setError] = useState("");
+    [error, setError] = useState(""),
+    [loading, setLoading] = useState(true);
+  const inFlight = useRef(false);
   async function load(after = 0) {
+    if (inFlight.current) return;
+    inFlight.current = true;
+    setLoading(true);
     try {
       setPage(await workspace({ action: "audit", after }));
       setError("");
     } catch (e) {
       setError(String(e));
+    } finally {
+      inFlight.current = false;
+      setLoading(false);
     }
   }
   useEffect(() => {
@@ -1465,12 +1473,12 @@ function Audit() {
         Correlate actor, effective principal, policy revision, source revision
         and execution ID. Query text, rows and credentials are excluded.
       </p>
-      <button className="button" onClick={() => void load()}>
+      <button className="button" disabled={loading} onClick={() => void load()}>
         Refresh audit
       </button>
       <button
         className="button"
-        disabled={!page?.events.length}
+        disabled={loading || !page?.events.length}
         onClick={() => void load(page?.through)}
       >
         Next audit page
