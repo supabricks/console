@@ -1,0 +1,105 @@
+.governed-login {
+  max-width: 640px;
+  margin: 12vh auto;
+  padding: 32px;
+}
+.governed .governed-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0;
+}
+.governed input,
+.governed select,
+.governed textarea {
+  font: inherit;
+  border: 1px solid #d6dbd8;
+  background: white;
+  color: #20332b;
+  border-radius: 6px;
+  padding: 10px;
+  max-width: 100%;
+  min-width: 0;
+}
+.governed textarea {
+  font-family: monospace;
+  width: 100%;
+  box-sizing: border-box;
+}
+.governed section {
+  padding: 24px 0;
+  border-top: 1px solid #d6dbd8;
+  margin-top: 24px;
+}
+.governed .button {
+  margin: 4px 8px 4px 0;
+}
+.governed-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.governed-result {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: #f1f4f2;
+  border-radius: 8px;
+  padding: 16px;
+  max-height: 420px;
+  overflow: auto;
+}
+.governed-datasets label {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+}
+.governed fieldset {
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+.governed header details {
+  font-size: 12px;
+}
+.governed .sidebar form {
+  margin-top: 24px;
+}
+.governed .sidebar input,
+.governed .sidebar select {
+  width: 100%;
+  box-sizing: border-box;
+}
+.governed .sidebar-bottom {
+  position: static;
+  margin-top: auto;
+}
+.governed .sidebar {
+  overflow-y: auto;
+}
+.governed main > h1 {
+  margin-bottom: 24px;
+}
+
+.governed .sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+.governed .brand {
+  margin-top: 0;
+}
+.governed .governed-datasets label {
+  flex-wrap: wrap;
+}
+.governed .governed-datasets code {
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .governed .sidebar {
+    position: static;
+    height: auto;
+  }
+}

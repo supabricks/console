@@ -22,7 +22,11 @@ const Notebook = lazy(async () => {
 // A launch secret is single-use. Remove it before any API call or UI rendering.
 const launch = new URLSearchParams(location.hash.slice(1)).get("launch");
 history.replaceState(null, "", location.pathname);
-const authentication = authenticate(launch);
+const governed = location.pathname.startsWith("/auth/v1/");
+const authentication = governed ? Promise.resolve() : authenticate(launch);
+const GovernedConsole = lazy(() =>
+  import("./governed").then((m) => ({ default: m.GovernedConsole })),
+);
 
 function Mark() {
   return (
@@ -594,4 +598,12 @@ function App() {
     </div>
   );
 }
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(
+  governed ? (
+    <Suspense fallback={<p>Loading governed console…</p>}>
+      <GovernedConsole />
+    </Suspense>
+  ) : (
+    <App />
+  ),
+);

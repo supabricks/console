@@ -127,3 +127,24 @@ browser workflow against an installed fixture with the managed catalog available
 The platform's `e2e/native/catalog/console.py` assembles that fixture from pinned
 engines, UC, the current binary and these built assets. Existing browser suites
 remain required alongside this additional workflow.
+
+
+The UC09.7 governed console is selected by the platform's explicit
+`console --governed --provider NAME --redirect LOOPBACK_CALLBACK` launcher.
+It uses OIDC sign-in and HttpOnly sessions with project-filtered Data, SQL,
+notebook and package workflows, reviewed catalog sharing, source-bound service
+use, revocation and audit. Project roles, data grants and execution grants remain
+separate. Session loss clears signed-in state; the existing local-owner console
+keeps its current launcher and reconnect behavior.
+
+This preview supports bounded `.sbdata` and notebook imports. It does not enable
+shared ingress, foreign `.sbproj` activation, host kernels or environment hooks.
+The platform contract and source qualification results are in
+`docs/architecture/uc097-governed-console.md` in `supabricks/platform`.
+
+`scripts/governed-qualify.mjs --config /private/browser.json` runs the independent
+Alice/Bob browser scenarios. Use platform's
+`e2e/native/governed-console/qualify.py` to provision its disposable pinned IdP,
+native database, managed UC and isolated runtime fixture; the config contains
+fixture credentials and must stay private. The test verifies a real Spark result,
+source-specific service use, live notebook revocation and correlated audit.
