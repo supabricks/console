@@ -23,6 +23,10 @@ jobs:
           cache: npm
       - run: npm ci --no-audit --no-fund
       - run: npm run build
+      - name: Audit navigation regression
+        run: |
+          npx playwright install --with-deps chromium
+          node scripts/governed-audit-test.mjs
       - name: Check product harness syntax
         run: for script in scripts/*.mjs; do node --check "$script"; done
       - uses: actions/upload-artifact@v4
