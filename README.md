@@ -1,9 +1,25 @@
 # Supabricks Console
 
-The Apache-2.0 browser UI for Supabricks: PostgreSQL and Spark SQL workspaces, CSV/TSV/JSON/Parquet ingestion,
-branch controls and JupyterLab notebooks connected to local Sail kernels.
+The Apache-2.0 browser UI for Supabricks: PostgreSQL and analytical workspaces,
+file ingestion, branch controls, catalog datasets, portable projects, notebooks
+and governed access.
 This repository owns the React application, browser API client, locked frontend
 dependencies, asset inventory, notices and product browser tests.
+
+## Product documentation
+
+Start with the [console product documentation](docs/README.md):
+
+- [Current state and direction](docs/current-state.md): implemented surfaces, product vocabulary and the Databricks reference.
+- [Jobs to be done](docs/jobs-to-be-done.md): users, desired outcomes, priorities and success measures.
+- [User flows](docs/user-flows.md): connected journeys, decisions, permission boundaries and recovery behavior.
+
+These documents define the next product experience; proposed interactions are
+distinguished from existing functionality. The
+[platform documentation home](https://github.com/supabricks/platform/blob/main/docs/README.md)
+owns stack architecture, implementation plans and release evidence.
+
+## Source history
 
 Extracted with Git history from `supabricks/platform` PR #33 at
 `3d51a05c3d3df0ce67131e09ba8759720ea17252`. The notebook repairs and macOS
@@ -49,9 +65,12 @@ Start/configure the runtime using platform's source-build instructions first.
 Commit UI changes here; update the platform gitlink in a separate PR after
 qualification. Both repositories retain lockfiles and their own CI.
 
-The current host contract is same-origin `/api/`, an authenticated launch
-fragment, and a host-generated `supabricks-style-nonce` meta element for notebook
-styles. Opening `dist/index.html` as a file is not a functioning runtime.
+The local host contract is same-origin `/api/`, an authenticated launch fragment,
+and a host-generated `supabricks-style-nonce` meta element for notebook styles.
+The governed console uses its separate authenticated API and server-managed
+OIDC session; it must not fall back to local-owner authorization. See the
+[governed server guide](https://github.com/supabricks/platform/blob/main/docs/handbook/governed-server.md).
+Opening `dist/index.html` as a file is not a functioning runtime.
 Moving the source makes future reuse on `supabricks.io` possible; hosted-to-local
 authentication and connection transport remain a later product phase.
 
