@@ -1,4 +1,5 @@
 import { qualifyProjectCreation } from "./project-create.mjs";
+import { qualifySync } from "./sync.mjs";
 import { qualifyProjects } from "./projects.mjs";
 import { qualifyAnalytics, verifyAnalyticsAfterRestart } from "./analytics.mjs";
 // Real browser + native runtime. Every mutation is confined to a new /tmp root.
@@ -181,7 +182,7 @@ try {
   checks.push(
     "reload uses authenticated session; repeated CLI launch reuses the bound bridge with a fresh one-use ticket",
   );
-  if (options["--slice"] !== "analytics") {
+  if (!["analytics", "sync"].includes(options["--slice"])) {
     await qualifyWorkspace({
       page,
       context,
@@ -204,15 +205,25 @@ try {
       screenshot: options["--screenshot"],
     });
   }
-  const analyticalReader = await qualifyAnalytics({
-    page,
-    context,
-    browser,
-    origin,
-    cli,
-    checks,
-    launch,
-  });
+  const analyticalReader =
+    options["--slice"] === "sync"
+      ? null
+      : await qualifyAnalytics({
+          page,
+          context,
+          browser,
+          origin,
+          cli,
+          checks,
+          launch,
+        });
+  if (options["--sync"] === "true")
+    await qualifySync({
+      page,
+      cli,
+      checks,
+      screenshot: options["--sync-screenshot"],
+    });
   if (!options["--slice"]) {
     const cliAt = async (at, ...command) => {
       const result = await exec(binary, [...command, "--project", at], {
@@ -298,9 +309,10 @@ try {
   checks.push(
     "whole-cell shutdown and console-driven restart retain branches and issue fresh browser sessions",
   );
-  if (options["--slice"] !== "analytics")
+  if (!["analytics", "sync"].includes(options["--slice"]))
     await verifySavedAfterRestart(page, checks);
-  await verifyAnalyticsAfterRestart(cli, analyticalReader, checks);
+  if (analyticalReader)
+    await verifyAnalyticsAfterRestart(cli, analyticalReader, checks);
   await qualifyProjectCreation({
     context,
     launchHome: async () =>

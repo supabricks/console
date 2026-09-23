@@ -1,3 +1,4 @@
+import { SyncPanel, type SyncCommand } from "./sync";
 import {
   cloneElement,
   useId,
@@ -307,6 +308,7 @@ function ProjectWorkspace({
 }) {
   const [policy, setPolicy] = useState<Json | null>(null),
     [branches, setBranches] = useState<Json[]>([]),
+    [syncCapabilities, setSyncCapabilities] = useState<Json>({}),
     [branch, setBranch] = useState(""),
     [result, setResult] = useState<Json | null>(null),
     [error, setError] = useState(""),
@@ -367,6 +369,7 @@ function ProjectWorkspace({
       return p;
     });
     setBranches(b.branches);
+    setSyncCapabilities(b.capabilities ?? {});
     setBranch((old) =>
       b.branches.some((v: Json) => v.id === old)
         ? old
@@ -474,6 +477,22 @@ function ProjectWorkspace({
     }
     return { dataset_count: (v.items ?? []).length };
   }
+  async function ensurePublicationNamespace() {
+    await workspace({ action: "namespace", deployment, ensure: true });
+    const deadline = Date.now() + 120000;
+    while (live.current && Date.now() < deadline) {
+      const value = await workspace({
+        action: "namespace",
+        deployment,
+        ensure: false,
+      });
+      if (value.namespace?.state === "ready") return;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    throw new Error(
+      "Catalog namespace is still preparing. Review publication again when it is ready.",
+    );
+  }
   async function prepareSnapshot() {
     const exported = await data({ action: "export" });
     const id = exported.result.export_id;
@@ -509,11 +528,7 @@ function ProjectWorkspace({
       () => workspace({ action: "snapshot", deployment, export: id }),
       (v) => v.publication?.state === "published",
     );
-    await workspace({ action: "namespace", deployment, ensure: true });
-    await waitFor(
-      () => workspace({ action: "namespace", deployment, ensure: false }),
-      (v) => v.namespace?.state === "ready",
-    );
+    await ensurePublicationNamespace();
     const reviewed = await workspace({
       action: "publication",
       deployment,
@@ -655,6 +670,31 @@ function ProjectWorkspace({
               }
             />
           </section>
+          {branch && policy && (
+            <SyncPanel
+              key={`${deployment}:${branch}:${policy.policy_revision}`}
+              scope={`${deployment}:${branch}`}
+              branch={branch}
+              governed
+              onPublication={(epoch, refresh) => {
+                setExportId(refresh);
+                setPublication({ epoch_id: epoch });
+                setPreview(null);
+              }}
+              capabilities={syncCapabilities}
+              request={async (command: SyncCommand, service?: string) =>
+                workspace({
+                  action: "sync",
+                  deployment,
+                  request: {
+                    command,
+                    expected_policy: policy.policy_revision,
+                    service_principal: service ?? null,
+                  },
+                })
+              }
+            />
+          )}
           <section>
             <h2>Publish a snapshot</h2>
             <p>
@@ -714,6 +754,7 @@ function ProjectWorkspace({
                 disabled={busy}
                 onClick={() =>
                   void run(async () => {
+                    await ensurePublicationNamespace();
                     const v = await workspace({
                       action: "publication",
                       deployment,
@@ -1103,11 +1144,19 @@ function Access({
           </Field>
           <Field label="Capability">
             <select value={cap} onChange={(e) => setCap(e.target.value)}>
-              {["read", "write", "ddl", "copy_source", "receive", "share"].map(
-                (v) => (
-                  <option key={v}>{v}</option>
-                ),
-              )}
+              {[
+                "read",
+                "write",
+                "ddl",
+                "copy_source",
+                "receive",
+                "share",
+                "manage_sync",
+                "execute_sync",
+                "read_sync",
+              ].map((v) => (
+                <option key={v}>{v}</option>
+              ))}
             </select>
           </Field>
           {[true, false].map((present) => (

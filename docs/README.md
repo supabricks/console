@@ -34,6 +34,11 @@ qualification. These documents own console product intent. Backend capability
 claims must remain consistent with the
 [platform delivery ledger](https://github.com/supabricks/platform/blob/main/docs/plans/status.md).
 
+## Implemented source additions
+
+- [Managed analytical sync](managed-sync.md): shared local/governed controls,
+  observed freshness, reviewed resync and capability fallback (SY06 source slice).
+
 ## Status and working assumptions
 
 First draft: 2026-09-22. Source baseline: console `4544ee6` and platform
