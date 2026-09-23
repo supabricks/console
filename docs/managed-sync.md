@@ -18,13 +18,18 @@ Governed entry: **Data → selected branch → Managed analytical sync**.
 - Pause, resume, cancellation, deletion and resync have separate effects. Resync
   first reviews the full-copy consequence, then pauses and retires capture; the
   user resumes after cleanup to start a new bootstrap.
-- Signed-in snapshot policies request a service principal with branch Read and
+- Signed-in policies request a service principal with branch Read and
   Execute sync. The manager separately needs Read, Manage sync and Read sync.
   Sharing review uses existing Share/UC controls and does not grant access as a
-  side effect of creation.
+  side effect of creation. Revoked authority takes precedence over capture
+  status and disables resume, resync and result sharing; explicit deletion
+  remains available.
 - Capability version `sync_controls=1` enables the surface. Missing capability
-  fields display an explicit older-runtime message. Governed incremental modes
-  and event triggers remain disabled until their backend profiles are qualified.
+  fields display an explicit older-runtime message. Governed triggered/continuous
+  modes require matching native workers. Event triggers remain unavailable.
+- Completed incremental runs retain their published artifact for sharing review.
+  Sharing creates a bounded immutable view of that epoch; later commits do not
+  change the publication or the current reader. Review discloses the extra copy.
 
 This adds controls to the working console; it does not implement the complete
 proposed page migration or the reusable design-system primitives. The platform's
@@ -41,3 +46,8 @@ node scripts/qualify.mjs --binary PLATFORM_BINARY --bundle ENGINE --helpers HELP
   --python ANALYTICAL_PYTHON --worker EXPORT_WORKER --slice sync --sync true \
   --report /tmp/sy06-console.json
 ```
+
+`scripts/governed-sync.mjs` runs through the platform's
+`e2e/native/governed-console/qualify.py --sync` harness. It covers real OIDC users,
+explicit service grants, continuous progress after manager logout, denied project
+discovery, incremental sharing review, resync/cleanup/resume and service revocation.

@@ -477,6 +477,22 @@ function ProjectWorkspace({
     }
     return { dataset_count: (v.items ?? []).length };
   }
+  async function ensurePublicationNamespace() {
+    await workspace({ action: "namespace", deployment, ensure: true });
+    const deadline = Date.now() + 120000;
+    while (live.current && Date.now() < deadline) {
+      const value = await workspace({
+        action: "namespace",
+        deployment,
+        ensure: false,
+      });
+      if (value.namespace?.state === "ready") return;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    throw new Error(
+      "Catalog namespace is still preparing. Review publication again when it is ready.",
+    );
+  }
   async function prepareSnapshot() {
     const exported = await data({ action: "export" });
     const id = exported.result.export_id;
@@ -512,11 +528,7 @@ function ProjectWorkspace({
       () => workspace({ action: "snapshot", deployment, export: id }),
       (v) => v.publication?.state === "published",
     );
-    await workspace({ action: "namespace", deployment, ensure: true });
-    await waitFor(
-      () => workspace({ action: "namespace", deployment, ensure: false }),
-      (v) => v.namespace?.state === "ready",
-    );
+    await ensurePublicationNamespace();
     const reviewed = await workspace({
       action: "publication",
       deployment,
@@ -742,6 +754,7 @@ function ProjectWorkspace({
                 disabled={busy}
                 onClick={() =>
                   void run(async () => {
+                    await ensurePublicationNamespace();
                     const v = await workspace({
                       action: "publication",
                       deployment,

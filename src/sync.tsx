@@ -64,6 +64,7 @@ type Policy = {
   last_epoch_id?: string;
   error?: string;
   pause_requested: boolean;
+  authority_status?: string;
   capture_status?: Metrics;
   continuous_status?: Metrics;
 };
@@ -75,6 +76,7 @@ type Run = {
   epoch_id?: string;
   source_lsn?: string;
   refresh_id?: string;
+  published_artifact_id?: string;
   error?: string;
 };
 type Review = {
@@ -229,6 +231,7 @@ export function SyncPanel({
     }
   }
   const metrics = policy?.continuous_status ?? policy?.capture_status;
+  const revoked = policy?.authority_status === "revoked_or_unavailable";
   const lagKnown =
     connected &&
     metrics?.lag_observed_at_ms != null &&
@@ -282,9 +285,9 @@ export function SyncPanel({
           </p>
           {governed && (
             <p>
-              Snapshot schedules use a branch-scoped service identity. Governed
-              triggered and continuous modes remain unavailable until
-              version-pinned catalog storage is qualified.
+              Sync runs use a service identity scoped to this branch. Sharing an
+              incremental epoch creates a separate immutable copy for its
+              readers.
             </p>
           )}
           {error && <p role="alert">{error}</p>}
@@ -463,6 +466,7 @@ export function SyncPanel({
               className="button primary"
               disabled={
                 blocked ||
+                revoked ||
                 !selectedAvailable ||
                 (mode === "continuous" && !acknowledged) ||
                 (interval > 0 && interval < 60) ||
@@ -482,9 +486,11 @@ export function SyncPanel({
                 <dt>State</dt>
                 <dd>
                   {connected
-                    ? policy.pause_requested
-                      ? "pausing"
-                      : (metrics?.state ?? policy.state)
+                    ? policy.state === "blocked"
+                      ? "blocked"
+                      : policy.pause_requested
+                        ? "pausing"
+                        : (metrics?.state ?? policy.state)
                     : "unavailable"}
                 </dd>
                 <dt>Last success</dt>
@@ -553,6 +559,7 @@ export function SyncPanel({
                 <button
                   disabled={
                     blocked ||
+                    revoked ||
                     policy.pause_requested ||
                     (policy.state === "active" && !policy.error)
                   }
@@ -562,7 +569,7 @@ export function SyncPanel({
                 </button>
                 {policy.config.mode !== "snapshot" && (
                   <button
-                    disabled={blocked}
+                    disabled={blocked || revoked}
                     onClick={() =>
                       void send({ kind: "review_resync", id: policy.id })
                     }
@@ -596,7 +603,9 @@ export function SyncPanel({
                   <p>{review.effect}</p>
                   <button
                     disabled={
-                      blocked || review.expected_revision !== policy.revision
+                      blocked ||
+                      revoked ||
+                      review.expected_revision !== policy.revision
                     }
                     onClick={() =>
                       void send({
@@ -660,12 +669,15 @@ export function SyncPanel({
                         )}
                         {r.state === "succeeded" &&
                           r.epoch_id &&
-                          r.refresh_id &&
+                          (r.refresh_id || r.published_artifact_id) &&
                           onPublication && (
                             <button
-                              disabled={blocked}
+                              disabled={blocked || revoked}
                               onClick={() =>
-                                onPublication(r.epoch_id!, r.refresh_id!)
+                                onPublication(
+                                  r.epoch_id!,
+                                  (r.refresh_id || r.published_artifact_id)!,
+                                )
                               }
                             >
                               Select epoch for sharing review
