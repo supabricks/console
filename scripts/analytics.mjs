@@ -264,16 +264,43 @@ export async function qualifyAnalytics({
     max_rows: 200,
     timeout_ms: 30000,
   });
-  await area.getByRole("button", { name: "Cancel analytical session" }).click();
-  await expect
-    .poll(async () => (await api({ action: "status", id: b })).state, {
-      timeout: 30000,
-    })
-    .toMatch(/^(cancelled|failed|closed)$/);
+  // The daemon can commit cancellation before its HTTP response reaches React.
+  // Hold that response so the active-session selector cannot race the action's
+  // completion and be switched back to the cancelled session by a late reply.
+  let releaseCancellation;
+  const heldCancellation = new Promise((resolve) => {
+    releaseCancellation = resolve;
+  });
+  const delayCancellation = async (route) => {
+    const body = route.request().postDataJSON();
+    if (body?.action === "analytics" && body.command?.action === "cancel") {
+      const response = await route.fetch();
+      await heldCancellation;
+      await route.fulfill({ response });
+    } else await route.continue();
+  };
+  await page.route("**/api/workspace", delayCancellation);
+  try {
+    await area.getByRole("button", { name: "Cancel analytical session" }).click();
+    await expect
+      .poll(async () => (await api({ action: "status", id: b })).state, {
+        timeout: 30000,
+      })
+      .toMatch(/^(cancelled|failed|closed)$/);
+    await expect(
+      area.getByRole("combobox", { name: "Analytical session", exact: true }),
+    ).toBeDisabled();
+  } finally {
+    releaseCancellation();
+    await page.unroute("**/api/workspace", delayCancellation);
+  }
   await area
     .getByRole("combobox", { name: "Analytical session", exact: true })
     .selectOption(a);
   await query();
+  record(
+    "C03 delayed cancellation response cannot replace the next selected session",
+  );
   record(
     "C03 result limits visibly truncate and targeted cancellation releases one session while its peer remains pinned and usable",
   );
