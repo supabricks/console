@@ -292,7 +292,9 @@ export async function qualifyAnalytics({
     ).toBeDisabled();
   } finally {
     releaseCancellation();
-    await page.unroute("**/api/workspace", delayCancellation);
+    // Finish the held handler before removing it; unroute() alone can continue
+    // an in-flight request before its pending fulfill() has completed.
+    await page.unrouteAll({ behavior: "wait" });
   }
   await area
     .getByRole("combobox", { name: "Analytical session", exact: true })
