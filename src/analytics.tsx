@@ -376,6 +376,7 @@ export function Analytics({
           <select
             aria-label="Analytical session"
             value={active}
+            disabled={busy}
             onChange={(e) => {
               setActive(e.target.value);
               setError("");
