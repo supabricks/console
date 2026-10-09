@@ -178,7 +178,7 @@ export async function qualifyAnalytics({
   );
   await area.getByRole("button", { name: "Open latest session" }).click();
   await expect(area.locator(":scope > .notice")).toContainText(
-    "both analytical session slots are occupied",
+    "analytical resource capacity is occupied; close active sessions first",
   );
   const other = await browser.newContext();
   try {
