@@ -86,15 +86,15 @@ export const BACKING: Backing[] = [
   { id: 'NB-06', section: 'Notebooks', title: 'Python environment: add and remove packages, prepare, adopt, offline bundles', status: 'live', note: 'One managed environment per project with a lock file; running kernels adopt a prepared environment explicitly.' },
   { id: 'NB-07', section: 'Notebooks', title: 'Autosave and checkpoints', status: 'new', note: 'Saves are explicit and revision-checked. There is no autosave or checkpoint history.', issues: [278] },
   { id: 'UC-01', section: 'Catalog', title: 'Browse tables with columns, ownership and freshness', status: 'live', note: 'catalog metadata list / describe, backed by the bundled open-source Unity Catalog. The console shows one flat page today.' },
-  { id: 'UC-02a', section: 'Catalog', title: 'Table and column descriptions', status: 'new', note: 'Catalog metadata is read-only through the platform: list, describe, resolve and validate. Comments come from PostgreSQL; they cannot be edited on analytical tables.' },
-  { id: 'UC-02b', section: 'Catalog', title: 'Lineage across notebooks and columns', status: 'new', note: 'Observed provenance covers import to table and version to publication. Python and column-level lineage are not inferred.' },
+  { id: 'UC-02a', section: 'Catalog', title: 'Table and column descriptions', status: 'new', note: 'Catalog metadata is read-only through the platform: list, describe, resolve and validate. Comments come from PostgreSQL; they cannot be edited on analytical tables.', issues: [280] },
+  { id: 'UC-02b', section: 'Catalog', title: 'Lineage across notebooks and columns', status: 'new', note: 'Observed provenance covers import to table and version to publication. Python and column-level lineage are not inferred.', issues: [281] },
   { id: 'UC-03a', section: 'Catalog', title: 'Publish a reviewed version to the catalog', status: 'live', note: 'catalog publication preview / publish, fenced by a preview hash and revisions. No data is copied for full snapshots.' },
-  { id: 'UC-03b', section: 'Catalog', title: 'Publish a chosen subset of tables', status: 'new', note: 'A publication is always the complete table set of a version.' },
+  { id: 'UC-03b', section: 'Catalog', title: 'Publish a chosen subset of tables', status: 'new', note: 'A publication is always the complete table set of a version.', issues: [282] },
   { id: 'UC-04', section: 'Catalog', title: 'Publications: list, withdraw, resume, see who holds them', status: 'live', note: 'catalog publication status / resume / unpublish, with retention holders.' },
   { id: 'UC-05', section: 'Catalog', title: 'Shared datasets: discover, bind, review updates and removal', status: 'live', note: 'catalog datasets list / describe / references and reviewed project plans. Discovery alone grants nothing.' },
   { id: 'UC-06', section: 'Catalog', title: 'Catalog service: health, restart, rotate key, external metastore', status: 'api', note: 'catalog service status / restart / rotate-key / configure are CLI-only.' },
   { id: 'UC-07', section: 'Catalog', title: 'Table permissions by person or group', status: 'live', note: 'SELECT grants exist in the governed server profile only, through reviewed sharing plans. A local installation has one owner.' },
-  { id: 'UC-08', section: 'Catalog', title: 'Usage: who queried a table and how often', status: 'new', note: 'Readers holding a version are known; query counts per table are not recorded.' },
+  { id: 'UC-08', section: 'Catalog', title: 'Usage: who queried a table and how often', status: 'new', note: 'Readers holding a version are known; query counts per table are not recorded.', issues: [283] },
 ]
 
 export const backing = (id: string) => BACKING.find((b) => b.id === id)
