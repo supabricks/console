@@ -72,11 +72,11 @@ export const BACKING: Backing[] = [
   { id: 'AN-01b', section: 'Analytics', title: 'Query a chosen older version', status: 'api', note: 'analytics open --epoch ID exists; the console can only open the latest, or one handed over from the Data page.' },
   { id: 'AN-02a', section: 'Analytics', title: 'Version history per branch', status: 'api', note: 'analytics epochs --branch lists history with paging; the console shows only the latest publication.' },
   { id: 'AN-02b', section: 'Analytics', title: 'Pin a version and clean up old ones', status: 'api', note: 'analytics pin / renew / unpin and analytics gc --keep N exist; no console UI.' },
-  { id: 'AN-02c', section: 'Analytics', title: 'Version size and rows changed', status: 'new', note: 'Full exports record row counts and file sizes in their manifest; incremental versions do not report size or change counts through the API.' },
+  { id: 'AN-02c', section: 'Analytics', title: 'Version size and rows changed', status: 'new', note: 'Full exports record row counts and file sizes in their manifest; incremental versions do not report size or change counts through the API.', issues: [271] },
   { id: 'AN-03a', section: 'Analytics', title: 'Sessions: open, list, close, cancel; shared capacity', status: 'live', note: 'Two slots shared with notebooks and the CLI; sessions expire after 15 minutes and close after two minutes without a heartbeat.' },
   { id: 'AN-03b', section: 'Analytics', title: 'Compute profile per session', status: 'api', note: '--resource-profile compact|analytical exists; the console has no selector.' },
-  { id: 'AN-03c', section: 'Analytics', title: 'Show what owns each session', status: 'new', note: 'Sessions are listed by ID, branch and version. Whether a notebook, SQL tab or CLI shell holds one is not recorded.' },
-  { id: 'AN-05', section: 'Analytics', title: 'Spark query history', status: 'new', note: 'Queries have IDs within a session; nothing persists after the session closes.' },
+  { id: 'AN-03c', section: 'Analytics', title: 'Show what owns each session', status: 'new', note: 'Sessions are listed by ID, branch and version. The session record returned to clients does not say whether a notebook, SQL tab or CLI shell opened it.', issues: [272] },
+  { id: 'AN-05', section: 'Analytics', title: 'Spark query history', status: 'new', note: 'Queries have IDs within a session; nothing persists after the session closes.', issues: [273] },
 ]
 
 export const backing = (id: string) => BACKING.find((b) => b.id === id)
