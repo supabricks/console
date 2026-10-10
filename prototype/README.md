@@ -18,7 +18,8 @@ Built with React, shadcn/ui (Radix + Tailwind) and Recharts.
   screen. Accepted gaps become issues on `supabricks/platform`; record the
   issue number in the `issue` field.
 
-Built so far: a projects home and project overview, the PostgreSQL section (databases, database detail, branches,
+Built so far: a projects home and project overview, the Project section
+(definition graph, files, plan and apply, packages), the PostgreSQL section (databases, database detail, branches,
 table editor, SQL editor, object explorer) Sync (pipeline list, create flow,
 pipeline detail) and Analytics (Spark SQL as an engine in the SQL editor,
 versions, sessions) Notebooks (browser, a Jupyter-style editor, Python

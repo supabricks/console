@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { HashRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
-import { BookOpen, Check, LayoutDashboard, Cpu, Layers, ChevronsUpDown, Code2, Database, FolderTree, GitBranch, LibraryBig, ListChecks, Moon, RefreshCw, Search, Sparkles, Sun, Table2, Tags } from 'lucide-react'
+import { BookOpen, Boxes, Check, LayoutDashboard, Cpu, Layers, ChevronsUpDown, Code2, Database, FolderTree, GitBranch, LibraryBig, ListChecks, Moon, RefreshCw, Search, Sparkles, Sun, Table2, Tags } from 'lucide-react'
 import { StatusBadge } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command'
@@ -23,6 +23,7 @@ import Databases from '@/pages/Databases'
 import NotebookEditor from '@/pages/NotebookEditor'
 import Notebooks, { Environment } from '@/pages/Notebooks'
 import ObjectExplorer from '@/pages/ObjectExplorer'
+import Project from '@/pages/Project'
 import SqlEditor from '@/pages/SqlEditor'
 import Sync from '@/pages/Sync'
 import SyncCreate from '@/pages/SyncCreate'
@@ -79,7 +80,7 @@ function Shell() {
   const seg = loc.pathname.split('/').filter(Boolean)
   const gaps = BACKING.filter((b) => b.status !== 'live').length
   const fullBleed = ['tables', 'sql', 'explorer'].includes(seg[0]) || loc.pathname === '/analytics/sql' || (seg[0] === 'notebooks' && !!seg[1] && seg[1] !== 'environment')
-  const scoped = !['backend', 'sync', 'analytics', 'notebooks', 'catalog', 'home', 'overview'].includes(seg[0]) && !(seg[0] === 'databases' && !seg[1])
+  const scoped = !['backend', 'sync', 'analytics', 'notebooks', 'catalog', 'home', 'overview', 'project'].includes(seg[0]) && !(seg[0] === 'databases' && !seg[1])
   const run = (fn: () => void) => { setPalette(false); fn() }
 
   return (
@@ -98,6 +99,11 @@ function Shell() {
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={loc.pathname === '/overview'} tooltip="Overview">
                     <NavLink to="/overview"><LayoutDashboard /><span>Overview</span></NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={loc.pathname.startsWith('/project')} tooltip="Project">
+                    <NavLink to="/project"><Boxes /><span>Project</span></NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
@@ -264,6 +270,8 @@ function Shell() {
             <Route path="/notebooks/:name" element={<NotebookEditor />} />
             <Route path="/catalog" element={<Catalog />} />
             <Route path="/catalog/:tab" element={<Catalog />} />
+            <Route path="/project" element={<Project />} />
+            <Route path="/project/:tab" element={<Project />} />
             <Route path="/sync" element={<Sync />} />
             <Route path="/sync/new" element={<SyncCreate />} />
             <Route path="/sync/:id" element={<SyncDetail />} />
@@ -279,7 +287,7 @@ function Shell() {
         <CommandList>
           <CommandEmpty>Nothing matches that.</CommandEmpty>
           <CommandGroup heading="Go to">
-            {[{ to: '/overview', label: 'Overview', icon: LayoutDashboard }, ...NAV, ...LAKE, { to: '/home', label: 'All projects', icon: LayoutDashboard }].map((n) => <CommandItem key={n.to} onSelect={() => run(() => nav(n.to))}><n.icon />{n.label}</CommandItem>)}
+            {[{ to: '/overview', label: 'Overview', icon: LayoutDashboard }, { to: '/project', label: 'Project', icon: Boxes }, ...NAV, ...LAKE, { to: '/home', label: 'All projects', icon: LayoutDashboard }].map((n) => <CommandItem key={n.to} onSelect={() => run(() => nav(n.to))}><n.icon />{n.label}</CommandItem>)}
             <CommandItem onSelect={() => run(() => nav('/sync/new'))}><RefreshCw />New sync pipeline</CommandItem>
           </CommandGroup>
           <CommandSeparator />

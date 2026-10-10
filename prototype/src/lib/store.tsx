@@ -22,6 +22,8 @@ type Store = {
   setPublications: (fn: (p: Publication[]) => Publication[]) => void
   shared: SharedDataset[]
   setShared: (fn: (s: SharedDataset[]) => SharedDataset[]) => void
+  installedRev: number
+  setInstalledRev: (n: number) => void
   apiKeys: ApiKey[]
   setApiKeys: (fn: (k: ApiKey[]) => ApiKey[]) => void
   dbId: string
@@ -43,6 +45,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [apiKeys, setKeys] = useState(API_KEYS)
   const [pipelines, setPls] = useState(PIPELINES)
   const [sessions, setSes] = useState(SESSIONS)
+  const [installedRev, setInstalledRev] = useState(3)
   const [publications, setPubs] = useState(PUBLICATIONS)
   const [shared, setShr] = useState(SHARED)
   const [notebooks, setNbs] = useState(NOTEBOOKS)
@@ -62,6 +65,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       apiKeys, setApiKeys: (fn) => setKeys(fn),
       pipelines, setPipelines: (fn) => setPls(fn),
       sessions, setSessions: (fn) => setSes(fn),
+      installedRev, setInstalledRev,
       publications, setPublications: (fn) => setPubs(fn),
       shared, setShared: (fn) => setShr(fn),
       notebooks, setNotebooks: (fn) => setNbs(fn),
@@ -71,7 +75,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       branchName: branch?.name ?? 'main', setBranchName,
       db, branch, dbBranches, showBacking, setShowBacking,
     }
-  }, [databases, branches, apiKeys, pipelines, sessions, publications, shared, notebooks, packages, dbId, branchName, showBacking])
+  }, [databases, branches, apiKeys, pipelines, sessions, installedRev, publications, shared, notebooks, packages, dbId, branchName, showBacking])
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
