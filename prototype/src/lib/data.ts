@@ -432,3 +432,38 @@ export const PUBLICATIONS: Publication[] = [
   { id: 'pub_3f9a12c0', name: 'sales_analytics.app', pipeline: 'pl_7c41e0a2', revision: 3, version: 4169, follows: 'fixed', state: 'published', published: 'Oct 8, 16:20', consumers: ['finance-ops'] },
 ]
 export const sampleFor = (t: CatTable): Row[] => (t.kind === 'own' ? rowsFor(t.name, 12) : Array.from({ length: 8 }, (_, i) => Object.fromEntries(t.columns.map((c, j) => [c.name, c.type === 'long' ? 9000 + i * 7 + j : c.type === 'date' ? `2026-10-0${(i % 9) + 1}` : c.type.startsWith('decimal') ? Number((120 + i * 37.5 + j).toFixed(2)) : c.type.startsWith('timestamp') ? `2026-10-0${(i % 9) + 1} 0${i}:15:00+00` : c.nullable && i % 3 === 0 ? null : ['USD', 'EUR', 'paid', 'open', 'card', 'search', 'email', 'Autumn launch'][(i + j) % 8]]))))
+
+// ---- Projects and overview ----
+
+export type Project = { id: string; name: string; path: string; databases: number; pipelines: number; notebooks: number; lastActive: string; created: string; current?: boolean; state: 'running' | 'stopped' }
+export const PROJECTS: Project[] = [
+  { id: 'prj_sales', name: 'sales-analytics', path: '~/projects/sales-analytics', databases: 3, pipelines: 4, notebooks: 3, lastActive: 'Now', created: '2026-08-14', current: true, state: 'running' },
+  { id: 'prj_fin', name: 'finance-ops', path: '~/projects/finance-ops', databases: 1, pipelines: 2, notebooks: 5, lastActive: '2 hours ago', created: '2026-07-01', state: 'running' },
+  { id: 'prj_growth', name: 'growth', path: '~/projects/growth', databases: 1, pipelines: 1, notebooks: 2, lastActive: 'Yesterday', created: '2026-09-02', state: 'stopped' },
+]
+export const RECENT: { kind: 'notebook' | 'query' | 'table' | 'pipeline'; name: string; where: string; when: string; to: string }[] = [
+  { kind: 'notebook', name: 'revenue-exploration.ipynb', where: 'Notebook', when: '12 minutes ago', to: '/notebooks/revenue-exploration.ipynb' },
+  { kind: 'query', name: 'Revenue by region', where: 'Saved query, PostgreSQL', when: '25 minutes ago', to: '/sql' },
+  { kind: 'table', name: 'public.orders', where: 'Table on app / main', when: '1 hour ago', to: '/tables' },
+  { kind: 'pipeline', name: 'app / feature/loyalty-points', where: 'Sync pipeline, blocked', when: 'Yesterday', to: '/sync/pl_3d9e7741' },
+  { kind: 'notebook', name: 'churn-features.ipynb', where: 'Notebook', when: 'Yesterday', to: '/notebooks/churn-features.ipynb' },
+  { kind: 'query', name: 'Daily orders (30 days)', where: 'Saved query, Spark', when: '2 days ago', to: '/analytics/sql' },
+]
+export const ACTIVITY: { when: string; what: string; area: string; status: string; to: string }[] = [
+  { when: '14:05', what: 'Version 4,182 published for app / main', area: 'Sync', status: 'succeeded', to: '/sync/pl_7c41e0a2' },
+  { when: '14:01', what: 'Branch agent/backfill-test resumed on a new connection', area: 'Database', status: 'succeeded', to: '/branches' },
+  { when: '13:54', what: 'Sync run failed on app / feature/loyalty-points: source schema changed', area: 'Sync', status: 'failed', to: '/sync/pl_3d9e7741' },
+  { when: '13:52', what: 'Kernel started for revenue-exploration.ipynb', area: 'Notebooks', status: 'succeeded', to: '/notebooks/revenue-exploration.ipynb' },
+  { when: '11:03', what: 'Branch feature/loyalty-points created from staging', area: 'Database', status: 'succeeded', to: '/branches' },
+  { when: '09:40', what: 'Compute for app resized from Extra small to Small', area: 'Database', status: 'succeeded', to: '/databases/app/compute' },
+  { when: '02:00', what: 'Nightly snapshot of billing / main published version 69', area: 'Sync', status: 'succeeded', to: '/sync/pl_e80c2f17' },
+  { when: 'Yesterday', what: 'sales_analytics.app published to the catalog, revision 3', area: 'Catalog', status: 'succeeded', to: '/catalog/publications' },
+]
+export const SERVICES: [string, string, string][] = [
+  ['PostgreSQL engine', 'PostgreSQL 17.8, 4 computes running', 'running'],
+  ['Storage', '22.8 GB used on this device', 'running'],
+  ['Sync capture', '1 capture active, budgets healthy', 'running'],
+  ['Spark engine', 'Starts on demand, 1 session open', 'running'],
+  ['Unity Catalog', 'Local, 6 tables', 'running'],
+  ['Notebook service', '1 kernel running', 'running'],
+]

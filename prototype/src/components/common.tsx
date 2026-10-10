@@ -67,7 +67,7 @@ const TONE: Record<string, string> = {
 /** Status is always a word; the mark only reinforces it. */
 export function StatusBadge({ status }: { status: string }) {
   const tone = TONE[status] ?? 'text-muted-foreground'
-  const hollow = status === 'suspended' || status === 'idle' || status === 'paused'
+  const hollow = status === 'suspended' || status === 'idle' || status === 'paused' || status === 'stopped'
   return (
     <span className="inline-flex items-center gap-1.5 text-[13px] whitespace-nowrap">
       <span className={cn('size-2 rounded-full', tone, hollow ? 'border-[1.5px] border-current' : 'bg-current', (status === 'provisioning' || status === 'starting') && 'animate-pulse')} />

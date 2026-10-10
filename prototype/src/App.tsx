@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { HashRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
-import { BookOpen, Check, Cpu, Layers, ChevronsUpDown, Code2, Database, FolderTree, GitBranch, LibraryBig, ListChecks, Moon, RefreshCw, Search, Sparkles, Sun, Table2, Tags } from 'lucide-react'
+import { BookOpen, Check, LayoutDashboard, Cpu, Layers, ChevronsUpDown, Code2, Database, FolderTree, GitBranch, LibraryBig, ListChecks, Moon, RefreshCw, Search, Sparkles, Sun, Table2, Tags } from 'lucide-react'
 import { StatusBadge } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command'
@@ -17,6 +17,7 @@ import { Sessions, Versions } from '@/pages/Analytics'
 import BackendStatus from '@/pages/BackendStatus'
 import Branches from '@/pages/Branches'
 import DatabaseDetail from '@/pages/DatabaseDetail'
+import Home, { Overview } from '@/pages/Home'
 import Catalog from '@/pages/Catalog'
 import Databases from '@/pages/Databases'
 import NotebookEditor from '@/pages/NotebookEditor'
@@ -78,19 +79,30 @@ function Shell() {
   const seg = loc.pathname.split('/').filter(Boolean)
   const gaps = BACKING.filter((b) => b.status !== 'live').length
   const fullBleed = ['tables', 'sql', 'explorer'].includes(seg[0]) || loc.pathname === '/analytics/sql' || (seg[0] === 'notebooks' && !!seg[1] && seg[1] !== 'environment')
-  const scoped = !['backend', 'sync', 'analytics', 'notebooks', 'catalog'].includes(seg[0]) && !(seg[0] === 'databases' && !seg[1])
+  const scoped = !['backend', 'sync', 'analytics', 'notebooks', 'catalog', 'home', 'overview'].includes(seg[0]) && !(seg[0] === 'databases' && !seg[1])
   const run = (fn: () => void) => { setPalette(false); fn() }
 
   return (
     <SidebarProvider>
       <Sidebar collapsible="icon">
         <SidebarHeader className="h-12 justify-center border-b">
-          <Link to="/databases" className="flex items-center gap-2.5 px-1.5 group-data-[collapsible=icon]:px-0.5">
+          <Link to="/overview" className="flex items-center gap-2.5 px-1.5 group-data-[collapsible=icon]:px-0.5">
             <Mark className="size-6 shrink-0" />
             <span className="text-[17px] font-semibold tracking-tight group-data-[collapsible=icon]:hidden">supabricks</span>
           </Link>
         </SidebarHeader>
         <SidebarContent className="pt-1">
+          <SidebarGroup className="pb-0">
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={loc.pathname === '/overview'} tooltip="Overview">
+                    <NavLink to="/overview"><LayoutDashboard /><span>Overview</span></NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
           <SidebarGroup>
             <SidebarGroupLabel className="gap-2"><span className="size-1.5 rounded-full bg-oltp" />Database</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -167,7 +179,21 @@ function Shell() {
         <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-2 border-b bg-background px-3">
           <SidebarTrigger className="text-muted-foreground" />
           <nav className="flex min-w-0 items-center gap-2 text-[13px]" aria-label="Context">
-            <span className="truncate text-muted-foreground">sales-analytics</span>
+            {seg[0] === 'home' ? <span className="font-medium">This device</span> : (
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-md px-1.5 py-1 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+                  <span className={scoped ? 'text-muted-foreground' : 'font-medium'}>sales-analytics</span><ChevronsUpDown className="size-3 text-muted-foreground" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-60">
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">Projects</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => nav('/overview')}><span className="flex-1 font-medium">sales-analytics</span><Check className="text-primary" /></DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => nav('/home')}>finance-ops</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => nav('/home')}>growth</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => nav('/home')}>All projects</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             {scoped && (
               <>
                 <Crumb>
@@ -219,7 +245,9 @@ function Shell() {
         </header>
         <main className={fullBleed ? 'flex min-h-0 flex-1 flex-col' : 'mx-auto w-full max-w-[1240px] flex-1 px-8 py-7'}>
           <Routes>
-            <Route path="/" element={<Navigate to="/databases" replace />} />
+            <Route path="/" element={<Navigate to="/overview" replace />} />
+            <Route path="/home" element={<Home />} />
+            <Route path="/overview" element={<Overview />} />
             <Route path="/databases" element={<Databases />} />
             <Route path="/databases/:dbName" element={<DatabaseDetail />} />
             <Route path="/databases/:dbName/:tab" element={<DatabaseDetail />} />
@@ -251,7 +279,7 @@ function Shell() {
         <CommandList>
           <CommandEmpty>Nothing matches that.</CommandEmpty>
           <CommandGroup heading="Go to">
-            {[...NAV, ...LAKE].map((n) => <CommandItem key={n.to} onSelect={() => run(() => nav(n.to))}><n.icon />{n.label}</CommandItem>)}
+            {[{ to: '/overview', label: 'Overview', icon: LayoutDashboard }, ...NAV, ...LAKE, { to: '/home', label: 'All projects', icon: LayoutDashboard }].map((n) => <CommandItem key={n.to} onSelect={() => run(() => nav(n.to))}><n.icon />{n.label}</CommandItem>)}
             <CommandItem onSelect={() => run(() => nav('/sync/new'))}><RefreshCw />New sync pipeline</CommandItem>
           </CommandGroup>
           <CommandSeparator />

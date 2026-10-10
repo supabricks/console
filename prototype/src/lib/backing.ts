@@ -95,6 +95,12 @@ export const BACKING: Backing[] = [
   { id: 'UC-06', section: 'Catalog', title: 'Catalog service: health, restart, rotate key, external metastore', status: 'api', note: 'catalog service status / restart / rotate-key / configure are CLI-only.' },
   { id: 'UC-07', section: 'Catalog', title: 'Table permissions by person or group', status: 'live', note: 'SELECT grants exist in the governed server profile only, through reviewed sharing plans. A local installation has one owner.' },
   { id: 'UC-08', section: 'Catalog', title: 'Usage: who queried a table and how often', status: 'new', note: 'Readers holding a version are known; query counts per table are not recorded.', issues: [283] },
+  { id: 'HM-01', section: 'Home', title: 'Projects: list, create and open', status: 'live', note: 'The console home lists projects on this device and creates one with its main database.' },
+  { id: 'HM-01b', section: 'Home', title: 'Rename, stop and delete a project', status: 'new', note: 'No project lifecycle actions beyond create and open.' },
+  { id: 'HM-02', section: 'Home', title: 'Recent work across notebooks, queries, tables and pipelines', status: 'new', note: 'There is no record of recently opened items.' },
+  { id: 'HM-03', section: 'Home', title: 'One activity feed across the project', status: 'new', note: 'Operations are tracked per feature (branches, imports, sync runs, environments). There is no combined, ordered history.' },
+  { id: 'HM-04', section: 'Home', title: 'Health of each service', status: 'api', note: 'status and doctor report readiness per process on the command line; the console shows a single ready or not-ready pill.' },
+  { id: 'HM-05', section: 'Home', title: 'Project map: databases, pipelines and analytical tables together', status: 'live', note: 'Assembled in the console from branch, sync and snapshot listings.' },
 ]
 
 export const backing = (id: string) => BACKING.find((b) => b.id === id)
