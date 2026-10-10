@@ -96,9 +96,9 @@ export const BACKING: Backing[] = [
   { id: 'UC-07', section: 'Catalog', title: 'Table permissions by person or group', status: 'live', note: 'SELECT grants exist in the governed server profile only, through reviewed sharing plans. A local installation has one owner.' },
   { id: 'UC-08', section: 'Catalog', title: 'Usage: who queried a table and how often', status: 'new', note: 'Readers holding a version are known; query counts per table are not recorded.', issues: [283] },
   { id: 'HM-01', section: 'Home', title: 'Projects: list, create and open', status: 'live', note: 'The console home lists projects on this device and creates one with its main database.' },
-  { id: 'HM-01b', section: 'Home', title: 'Rename, stop and delete a project', status: 'new', note: 'No project lifecycle actions beyond create and open.' },
-  { id: 'HM-02', section: 'Home', title: 'Recent work across notebooks, queries, tables and pipelines', status: 'new', note: 'There is no record of recently opened items.' },
-  { id: 'HM-03', section: 'Home', title: 'One activity feed across the project', status: 'new', note: 'Operations are tracked per feature (branches, imports, sync runs, environments). There is no combined, ordered history.' },
+  { id: 'HM-01b', section: 'Home', title: 'Rename, stop and delete a project', status: 'new', note: 'No project lifecycle actions beyond create and open.', issues: [287] },
+  { id: 'HM-02', section: 'Home', title: 'Recent work across notebooks, queries, tables and pipelines', status: 'new', note: 'There is no record of recently opened items.', issues: [286] },
+  { id: 'HM-03', section: 'Home', title: 'One activity feed across the project', status: 'new', note: 'Operations are tracked per feature (branches, imports, sync runs, environments). There is no combined, ordered history.', issues: [285] },
   { id: 'HM-04', section: 'Home', title: 'Health of each service', status: 'api', note: 'status and doctor report readiness per process on the command line; the console shows a single ready or not-ready pill.' },
   { id: 'HM-05', section: 'Home', title: 'Project map: databases, pipelines and analytical tables together', status: 'live', note: 'Assembled in the console from branch, sync and snapshot listings.' },
 ]
