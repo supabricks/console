@@ -15,7 +15,7 @@ export default function BackendStatus() {
   const count = (s: BackingStatus) => BACKING.filter((b) => b.status === s).length
   const markdown = () =>
     ['| ID | Section | Feature | Status | Note | Issue |', '| --- | --- | --- | --- | --- | --- |',
-      ...rows.map((b) => `| ${b.id} | ${b.section} | ${b.title} | ${STATUS_LABEL[b.status]} | ${b.note} | ${b.issue ? `#${b.issue}` : ''} |`)].join('\n')
+      ...rows.map((b) => `| ${b.id} | ${b.section} | ${b.title} | ${STATUS_LABEL[b.status]} | ${b.note} | ${(b.issues ?? []).map((n) => `#${n}`).join(' ')} |`)].join('\n')
 
   return (
     <>
@@ -47,7 +47,7 @@ export default function BackendStatus() {
                 <TableCell className="font-medium whitespace-normal">{b.title}</TableCell>
                 <TableCell className={cn('font-medium whitespace-nowrap', TONE[b.status])}>{STATUS_LABEL[b.status]}</TableCell>
                 <TableCell className="max-w-md whitespace-normal text-muted-foreground">{b.note}</TableCell>
-                <TableCell className="text-muted-foreground">{b.issue ? `#${b.issue}` : 'Not filed'}</TableCell>
+                <TableCell className="whitespace-nowrap">{b.issues?.length ? b.issues.map((n) => <a key={n} className="mr-1.5 text-primary hover:underline" href={`https://github.com/supabricks/platform/issues/${n}`} target="_blank" rel="noreferrer">#{n}</a>) : <span className="text-muted-foreground">{b.status === 'new' ? 'Not filed' : 'None needed'}</span>}</TableCell>
               </TableRow>
             ))}
           </TableBody>
