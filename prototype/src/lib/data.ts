@@ -301,3 +301,77 @@ export const QUERY_HISTORY = [
 export const fmtMb = (mb: number) => (mb >= 1024 ? `${(mb / 1024).toFixed(1)} GB` : `${mb} MB`)
 export const fmtKb = (kb: number) => (kb >= 1024 * 1024 ? `${(kb / 1024 / 1024).toFixed(1)} GB` : kb >= 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${kb} kB`)
 export const fmtN = (n: number) => n.toLocaleString('en-US')
+
+// ---- Sync: PostgreSQL to Delta ----
+
+export type SyncMode = 'snapshot' | 'triggered' | 'continuous'
+export type SyncState = 'healthy' | 'lagging' | 'idle' | 'running' | 'paused' | 'blocked' | 'starting'
+export type Pipeline = {
+  id: string
+  db: string
+  branch: string
+  mode: SyncMode
+  state: SyncState
+  everySeconds: number | null
+  freshnessMs: number
+  batchMs: number
+  storage: 'compact' | 'large'
+  tables: string[]
+  created: string
+  revision: number
+  lastSuccess: string
+  nextRun: string | null
+  version: number
+  lagMs: number | null
+  sourceLsn: string
+  capturedLsn: string
+  publishedLsn: string
+  backlogBytes: number
+  spoolBytes: number
+  walBytes: number
+  blocked?: { title: string; detail: string }
+}
+
+const SYNCED = ['public.customers', 'public.orders', 'public.order_items']
+export const PIPELINES: Pipeline[] = [
+  { id: 'pl_7c41e0a2', db: 'db_app', branch: 'main', mode: 'continuous', state: 'healthy', everySeconds: null, freshnessMs: 5000, batchMs: 500, storage: 'compact', tables: SYNCED, created: '2026-09-24', revision: 7, lastSuccess: '3 seconds ago', nextRun: null, version: 4182, lagMs: 3100, sourceLsn: '0/4A3F2E18', capturedLsn: '0/4A3F2A40', publishedLsn: '0/4A3F1C90', backlogBytes: 184_320, spoolBytes: 245_760, walBytes: 358_440 },
+  { id: 'pl_19ab55d3', db: 'db_app', branch: 'staging', mode: 'triggered', state: 'idle', everySeconds: 900, freshnessMs: 5000, batchMs: 500, storage: 'compact', tables: SYNCED, created: '2026-09-28', revision: 3, lastSuccess: '11 minutes ago', nextRun: 'in 4 minutes', version: 212, lagMs: null, sourceLsn: '0/4A11C0D8', capturedLsn: '0/4A11C0D8', publishedLsn: '0/4A11A220', backlogBytes: 2_412_544, spoolBytes: 3_145_728, walBytes: 6_291_456 },
+  { id: 'pl_e80c2f17', db: 'db_billing', branch: 'main', mode: 'snapshot', state: 'idle', everySeconds: 86400, freshnessMs: 5000, batchMs: 500, storage: 'large', tables: ['public.invoices', 'public.payments', 'public.ledger_entries', 'public.accounts'], created: '2026-08-02', revision: 4, lastSuccess: 'Today 02:00', nextRun: 'Tomorrow 02:00 UTC', version: 69, lagMs: null, sourceLsn: '2/1C00F3A8', capturedLsn: '2/1BE204F0', publishedLsn: '2/1BE204F0', backlogBytes: 0, spoolBytes: 0, walBytes: 0 },
+  { id: 'pl_3d9e7741', db: 'db_app', branch: 'feature/loyalty-points', mode: 'triggered', state: 'blocked', everySeconds: null, freshnessMs: 5000, batchMs: 500, storage: 'compact', tables: SYNCED, created: '2026-10-07', revision: 5, lastSuccess: 'Yesterday 16:40', nextRun: null, version: 18, lagMs: null, sourceLsn: '0/4A2B77F0', capturedLsn: '0/4A2B1000', publishedLsn: '0/4A2A9E08', backlogBytes: 412_876_800, spoolBytes: 461_373_440, walBytes: 187_695_104, blocked: { title: 'The source schema changed', detail: 'Column customers.loyalty_points was added after this pipeline started. Publication stopped at version 18, which stays readable. Review a full resync to pick up the new column.' } },
+]
+
+export type SyncRun = { id: string; trigger: string; started: string; seconds: number; state: string; rows: number; version: number | null; lsn: string; error?: string }
+export function runsFor(p: Pipeline): SyncRun[] {
+  const trig = p.mode === 'continuous' ? 'Continuous' : p.mode === 'snapshot' ? 'Schedule' : p.everySeconds ? 'Schedule' : 'Manual'
+  return Array.from({ length: 14 }, (_, i) => {
+    const failed = p.state === 'blocked' && i === 0
+    const cancelled = i === 6
+    return {
+      id: `run_${(p.version * 7919 + i * 104729).toString(16).slice(0, 8)}`,
+      trigger: i === 13 ? 'Bootstrap' : i === 4 && p.mode !== 'continuous' ? 'Manual' : trig,
+      started: p.mode === 'continuous' ? `14:0${4 - Math.floor(i / 3)}:${String(57 - i * 4).padStart(2, '0')}` : i === 0 ? '13:54:02' : `Oct ${9 - Math.floor(i / 2)}, ${String(23 - i).padStart(2, '0')}:00`,
+      seconds: failed ? 2.1 : i === 13 ? 184 : p.mode === 'snapshot' ? 142 + i * 3 : p.mode === 'continuous' ? 0.6 + (i % 4) * 0.3 : 4 + (i % 5),
+      state: failed ? 'failed' : cancelled ? 'cancelled' : 'succeeded',
+      rows: failed || cancelled ? 0 : i === 13 ? 709_722 : p.mode === 'snapshot' ? 1_204_000 + i * 811 : p.mode === 'continuous' ? 40 + ((i * 37) % 160) : 2_100 + ((i * 977) % 9_000),
+      version: failed || cancelled ? null : p.version - i,
+      lsn: `${p.publishedLsn.split('/')[0]}/${(parseInt(p.publishedLsn.split('/')[1], 16) - i * 0x1a40).toString(16).toUpperCase()}`,
+      error: failed ? 'Source schema changed: customers.loyalty_points' : undefined,
+    }
+  })
+}
+
+/** How a PostgreSQL column type lands in Delta, or why it cannot. */
+export function deltaType(pg: string): { delta: string | null; why?: string } {
+  if (/^(bigint|integer|smallint)$/.test(pg)) return { delta: pg === 'bigint' ? 'long' : pg === 'integer' ? 'integer' : 'short' }
+  if (pg === 'boolean') return { delta: 'boolean' }
+  if (pg === 'text' || pg.startsWith('varchar')) return { delta: 'string' }
+  if (pg.startsWith('numeric(')) return { delta: pg.replace('numeric', 'decimal') }
+  if (pg === 'date') return { delta: 'date' }
+  if (pg === 'timestamptz') return { delta: 'timestamp (UTC)' }
+  if (pg === 'timestamp') return { delta: 'timestamp_ntz' }
+  return { delta: null, why: `${pg} has no lossless Delta mapping yet` }
+}
+
+export const MODE_LABEL: Record<SyncMode, string> = { snapshot: 'Snapshot', triggered: 'Triggered', continuous: 'Continuous' }
+export const fmtBytes = (b: number) => (b >= 1 << 30 ? `${(b / (1 << 30)).toFixed(1)} GiB` : b >= 1 << 20 ? `${(b / (1 << 20)).toFixed(1)} MiB` : b >= 1024 ? `${Math.round(b / 1024)} KiB` : `${b} B`)
+export const fmtEvery = (s: number | null) => (!s ? 'Manual' : s % 86400 === 0 ? `Every ${s / 86400 === 1 ? 'day' : `${s / 86400} days`}` : s % 3600 === 0 ? `Every ${s / 3600 === 1 ? 'hour' : `${s / 3600} hours`}` : `Every ${s / 60} minutes`)

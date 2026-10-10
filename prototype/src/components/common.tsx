@@ -56,7 +56,8 @@ export function PageHeader({ title, description, actions, tag }: { title: ReactN
 }
 
 const TONE: Record<string, string> = {
-  running: 'text-success', succeeded: 'text-success', active: 'text-success', installed: 'text-success',
+  running: 'text-success', succeeded: 'text-success', healthy: 'text-success',
+  lagging: 'text-warning', paused: 'text-muted-foreground', blocked: 'text-destructive', starting: 'text-info', active: 'text-success', installed: 'text-success',
   suspended: 'text-muted-foreground', idle: 'text-muted-foreground',
   provisioning: 'text-info', scaling: 'text-info',
   cancelled: 'text-warning', 'idle in transaction': 'text-warning',
@@ -66,10 +67,10 @@ const TONE: Record<string, string> = {
 /** Status is always a word; the mark only reinforces it. */
 export function StatusBadge({ status }: { status: string }) {
   const tone = TONE[status] ?? 'text-muted-foreground'
-  const hollow = status === 'suspended' || status === 'idle'
+  const hollow = status === 'suspended' || status === 'idle' || status === 'paused'
   return (
     <span className="inline-flex items-center gap-1.5 text-[13px] whitespace-nowrap">
-      <span className={cn('size-2 rounded-full', tone, hollow ? 'border-[1.5px] border-current' : 'bg-current', status === 'provisioning' && 'animate-pulse')} />
+      <span className={cn('size-2 rounded-full', tone, hollow ? 'border-[1.5px] border-current' : 'bg-current', (status === 'provisioning' || status === 'starting') && 'animate-pulse')} />
       <span className="capitalize">{status}</span>
     </span>
   )

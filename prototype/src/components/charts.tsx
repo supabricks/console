@@ -1,4 +1,4 @@
-import { Area, AreaChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip as RTooltip, XAxis, YAxis } from 'recharts'
+import { Area, AreaChart, CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip as RTooltip, XAxis, YAxis } from 'recharts'
 import type { ReactNode } from 'react'
 
 export type SeriesDef = { key: string; label: string; color: string }
@@ -22,8 +22,8 @@ function Tip({ active, payload, label, unit }: { active?: boolean; payload?: { n
 }
 
 /** A small time-series panel: title, current value, then the chart. */
-export function MetricChart({ title, value, data, series, unit = '', kind = 'area', tag, height = 150 }: {
-  title: string; value: ReactNode; data: Record<string, number | string>[]; series: SeriesDef[]; unit?: string; kind?: 'area' | 'line'; tag?: ReactNode; height?: number
+export function MetricChart({ title, value, data, series, unit = '', kind = 'area', tag, height = 150, target }: {
+  title: string; value: ReactNode; data: Record<string, number | string>[]; series: SeriesDef[]; unit?: string; kind?: 'area' | 'line'; tag?: ReactNode; height?: number; target?: { value: number; label: string }
 }) {
   const Chart = kind === 'area' ? AreaChart : LineChart
   return (
@@ -32,7 +32,7 @@ export function MetricChart({ title, value, data, series, unit = '', kind = 'are
         <div className="text-[13px] text-muted-foreground">{title}</div>
         {tag}
       </div>
-      <div className="tabular mt-0.5 mb-2 text-lg font-semibold">{value}</div>
+      <div className="tabular mt-0.5 mb-2 flex items-baseline gap-3 text-lg font-semibold">{value}{target && <span className="flex items-center gap-1.5 text-xs font-normal text-muted-foreground"><span className="w-4 border-t border-dashed border-warning" />{target.label}</span>}</div>
       {series.length > 1 && (
         <div className="mb-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
           {series.map((s) => (
@@ -46,6 +46,7 @@ export function MetricChart({ title, value, data, series, unit = '', kind = 'are
           <XAxis dataKey="t" tick={axis} tickLine={false} axisLine={false} minTickGap={40} />
           <YAxis tick={axis} tickLine={false} axisLine={false} width={48} />
           <RTooltip content={<Tip unit={unit} />} cursor={{ stroke: 'var(--muted-foreground)', strokeDasharray: '3 3' }} />
+          {target && <ReferenceLine y={target.value} stroke="var(--warning)" strokeDasharray="4 4" />}
           {series.map((s) =>
             kind === 'area' ? (
               <Area key={s.key} type="monotone" dataKey={s.key} name={s.label} stroke={s.color} fill={s.color} fillOpacity={0.1} strokeWidth={1.6} isAnimationActive={false} />

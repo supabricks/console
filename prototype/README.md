@@ -19,5 +19,6 @@ Built with React, shadcn/ui (Radix + Tailwind) and Recharts.
   issue number in the `issue` field.
 
 Built so far: the PostgreSQL section (databases, database detail, branches,
-table editor, SQL editor, object explorer). Sync, analytics, notebooks and
-catalog are listed in the sidebar as "later".
+table editor, SQL editor, object explorer) and Sync (pipeline list, create
+flow, pipeline detail). Analytics, notebooks and catalog are disabled in the
+sidebar until they are built.

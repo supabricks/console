@@ -1,13 +1,15 @@
 import { createContext, useContext, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { API_KEYS, BRANCHES, DATABASES } from './data'
-import type { ApiKey, Branch, Database } from './data'
+import { API_KEYS, BRANCHES, DATABASES, PIPELINES } from './data'
+import type { ApiKey, Branch, Database, Pipeline } from './data'
 
 type Store = {
   databases: Database[]
   setDatabases: (fn: (d: Database[]) => Database[]) => void
   branches: Branch[]
   setBranches: (fn: (b: Branch[]) => Branch[]) => void
+  pipelines: Pipeline[]
+  setPipelines: (fn: (p: Pipeline[]) => Pipeline[]) => void
   apiKeys: ApiKey[]
   setApiKeys: (fn: (k: ApiKey[]) => ApiKey[]) => void
   dbId: string
@@ -27,6 +29,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [databases, setDbs] = useState(DATABASES)
   const [branches, setBrs] = useState(BRANCHES)
   const [apiKeys, setKeys] = useState(API_KEYS)
+  const [pipelines, setPls] = useState(PIPELINES)
   const [dbId, setDbIdRaw] = useState('db_app')
   const [branchName, setBranchName] = useState('main')
   const [showBacking, setShowBackingRaw] = useState(() => { try { return localStorage.getItem('sb-backing') === '1' } catch { return false } })
@@ -40,12 +43,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       databases, setDatabases: (fn) => setDbs(fn),
       branches, setBranches: (fn) => setBrs(fn),
       apiKeys, setApiKeys: (fn) => setKeys(fn),
+      pipelines, setPipelines: (fn) => setPls(fn),
       dbId: db.id,
       setDbId: (id) => { setDbIdRaw(id); setBranchName('main') },
       branchName: branch?.name ?? 'main', setBranchName,
       db, branch, dbBranches, showBacking, setShowBacking,
     }
-  }, [databases, branches, apiKeys, dbId, branchName, showBacking])
+  }, [databases, branches, apiKeys, pipelines, dbId, branchName, showBacking])
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

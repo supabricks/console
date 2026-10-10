@@ -209,7 +209,7 @@ export function TableStructure({ t }: { t: TableDef }) {
 }
 
 export default function TableEditor() {
-  const { branchName, db } = useStore()
+  const { branchName, db, pipelines } = useStore()
   const nav = useNavigate()
   const [sel, setSel] = useState<ObjRef>({ kind: 'table', schema: 'public', name: 'orders' })
   const [create, setCreate] = useState(false)
@@ -232,7 +232,17 @@ export default function TableEditor() {
                 <div className="flex items-center gap-2"><h1 className="font-mono font-semibold">{t.schema}.{t.name}</h1><BackingTag id="TE-01" /></div>
                 <div className="text-xs text-muted-foreground">About {fmtN(t.rows)} rows, {fmtKb(t.sizeKb)}, {t.columns.length} columns{t.comment ? `, ${t.comment}` : ''}</div>
               </div>
-              <TabsList className="ml-auto"><TabsTrigger value="data">Data</TabsTrigger><TabsTrigger value="structure">Structure</TabsTrigger><TabsTrigger value="ddl">Definition</TabsTrigger></TabsList>
+              {(() => {
+                const pl = pipelines.find((x) => x.db === db.id && x.branch === branchName)
+                const on = pl?.tables.includes(`${t.schema}.${t.name}`)
+                return (
+                  <button onClick={() => nav(pl ? `/sync/${pl.id}` : `/sync/new?branch=${encodeURIComponent(branchName)}`)} className="ml-auto flex items-center gap-2 rounded-md border px-2 py-1 text-xs hover:bg-muted">
+                    <span className={on ? 'size-2 rounded-sm bg-olap' : 'size-2 rounded-sm border border-muted-foreground'} />
+                    {on ? `In Delta, ${pl!.mode === 'continuous' && pl!.lagMs ? `${(pl!.lagMs / 1000).toFixed(1)} s behind` : `as of ${pl!.lastSuccess.toLowerCase()}`}` : pl ? 'Not in this branch\'s pipeline' : 'Not synced to analytics'}
+                  </button>
+                )
+              })()}
+              <TabsList><TabsTrigger value="data">Data</TabsTrigger><TabsTrigger value="structure">Structure</TabsTrigger><TabsTrigger value="ddl">Definition</TabsTrigger></TabsList>
               <Button variant="outline" size="sm" onClick={() => nav('/sql')}><Code2 /> Query</Button>
             </div>
             <TabsContent value="data" className="flex min-h-0 flex-1 flex-col"><DataTab t={t} /></TabsContent>

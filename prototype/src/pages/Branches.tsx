@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bot, Clock, Code2, Diff, GitBranchPlus, List, MoreHorizontal, Network, Pause, Play, Search, Star } from 'lucide-react'
+import { Bot, Clock, Code2, Diff, GitBranchPlus, List, MoreHorizontal, Network, Pause, Play, RefreshCw, Search, Star } from 'lucide-react'
 import { toast } from 'sonner'
 import { BackingTag, ConfirmDelete, CopyField, PageHeader, StatusBadge } from '@/components/common'
 import { Button } from '@/components/ui/button'
@@ -160,7 +160,7 @@ const ROW_H = 40
 const GRAPH_W = 260
 
 export default function Branches() {
-  const { db, dbBranches, setBranches, branchName, setBranchName } = useStore()
+  const { db, dbBranches, setBranches, branchName, setBranchName, pipelines } = useStore()
   const nav = useNavigate()
   const [view, setView] = useState('tree')
   const [q, setQ] = useState('')
@@ -191,6 +191,7 @@ export default function Branches() {
         <DropdownMenuItem onClick={() => { setBranchName(b.name); nav('/sql') }}><Code2 /> Open in SQL editor</DropdownMenuItem>
         <DropdownMenuItem onClick={() => setCreate(b.name)}><GitBranchPlus /> Branch from here</DropdownMenuItem>
         <DropdownMenuItem onClick={() => setDiff(b.name)}><Diff /> Compare schema…</DropdownMenuItem>
+        {(() => { const pl = pipelines.find((x) => x.db === db.id && x.branch === b.name); return <DropdownMenuItem onClick={() => nav(pl ? `/sync/${pl.id}` : `/sync/new?branch=${encodeURIComponent(b.name)}`)}><RefreshCw /> {pl ? 'View sync pipeline' : 'Sync to analytics…'}</DropdownMenuItem> })()}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => { patch(b.id, { state: b.state === 'running' ? 'suspended' : 'running' }); toast.success(`${b.name} ${b.state === 'running' ? 'suspended' : 'resumed'}`) }}>
           {b.state === 'running' ? <><Pause /> Suspend</> : <><Play /> Resume</>}

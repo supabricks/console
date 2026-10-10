@@ -19,6 +19,9 @@ import DatabaseDetail from '@/pages/DatabaseDetail'
 import Databases from '@/pages/Databases'
 import ObjectExplorer from '@/pages/ObjectExplorer'
 import SqlEditor from '@/pages/SqlEditor'
+import Sync from '@/pages/Sync'
+import SyncCreate from '@/pages/SyncCreate'
+import SyncDetail from '@/pages/SyncDetail'
 import TableEditor from '@/pages/TableEditor'
 
 const NAV = [
@@ -28,8 +31,8 @@ const NAV = [
   { to: '/sql', label: 'SQL editor', icon: Code2 },
   { to: '/explorer', label: 'Object explorer', icon: FolderTree },
 ]
+const LAKE = [{ to: '/sync', label: 'Sync', icon: RefreshCw }]
 const LATER = [
-  { label: 'Sync', icon: RefreshCw },
   { label: 'Analytics', icon: Sparkles },
   { label: 'Notebooks', icon: BookOpen },
   { label: 'Catalog', icon: LibraryBig },
@@ -68,7 +71,7 @@ function Shell() {
   const seg = loc.pathname.split('/').filter(Boolean)
   const gaps = BACKING.filter((b) => b.status !== 'live').length
   const fullBleed = ['tables', 'sql', 'explorer'].includes(seg[0])
-  const scoped = seg[0] !== 'backend' && !(seg[0] === 'databases' && !seg[1])
+  const scoped = !['backend', 'sync'].includes(seg[0]) && !(seg[0] === 'databases' && !seg[1])
   const run = (fn: () => void) => { setPalette(false); fn() }
 
   return (
@@ -99,6 +102,13 @@ function Shell() {
             <SidebarGroupLabel className="gap-2"><span className="size-1.5 rounded-full bg-olap" />Lakehouse</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
+                {LAKE.map((n) => (
+                  <SidebarMenuItem key={n.to}>
+                    <SidebarMenuButton asChild isActive={loc.pathname.startsWith(n.to)} tooltip={n.label}>
+                      <NavLink to={n.to}><n.icon /><span>{n.label}</span></NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
                 {LATER.map((n) => (
                   <SidebarMenuItem key={n.label}>
                     <SidebarMenuButton disabled tooltip={`${n.label} is not in this prototype yet`} className="opacity-45">
@@ -210,6 +220,10 @@ function Shell() {
             <Route path="/tables" element={<TableEditor />} />
             <Route path="/sql" element={<SqlEditor />} />
             <Route path="/explorer" element={<ObjectExplorer />} />
+            <Route path="/sync" element={<Sync />} />
+            <Route path="/sync/new" element={<SyncCreate />} />
+            <Route path="/sync/:id" element={<SyncDetail />} />
+            <Route path="/sync/:id/:tab" element={<SyncDetail />} />
             <Route path="/backend" element={<BackendStatus />} />
           </Routes>
         </main>
@@ -221,7 +235,8 @@ function Shell() {
         <CommandList>
           <CommandEmpty>Nothing matches that.</CommandEmpty>
           <CommandGroup heading="Go to">
-            {NAV.map((n) => <CommandItem key={n.to} onSelect={() => run(() => nav(n.to))}><n.icon />{n.label}</CommandItem>)}
+            {[...NAV, ...LAKE].map((n) => <CommandItem key={n.to} onSelect={() => run(() => nav(n.to))}><n.icon />{n.label}</CommandItem>)}
+            <CommandItem onSelect={() => run(() => nav('/sync/new'))}><RefreshCw />New sync pipeline</CommandItem>
           </CommandGroup>
           <CommandSeparator />
           <CommandGroup heading={`Database ${db.name}`}>

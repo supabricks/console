@@ -55,6 +55,19 @@ export const BACKING: Backing[] = [
   { id: 'SQ-05', section: 'SQL editor', title: 'Query history', status: 'new', note: 'Query IDs exist, but there is no history listing.', issues: [261] },
   { id: 'OE-01a', section: 'Object explorer', title: 'Tables and columns', status: 'live', note: 'catalog [--branch] returns tables and columns (up to 1,000 columns).' },
   { id: 'OE-01b', section: 'Object explorer', title: 'Views, functions, sequences, types, indexes', status: 'new', note: 'Not returned by the catalog command.', issues: [260] },
+  { id: 'SY-01', section: 'Sync', title: 'Sync pipeline per branch: create, list, show', status: 'live', note: 'sync create / list / show. The platform calls a pipeline a policy.' },
+  { id: 'SY-01b', section: 'Sync', title: 'More than one incremental pipeline per installation', status: 'new', note: 'Triggered and continuous modes share one capture and one materializer per installation, and one policy per branch.' },
+  { id: 'SY-02a', section: 'Sync', title: 'Snapshot, triggered and continuous modes with schedule, freshness and batch settings', status: 'live', note: 'Schedule 60 s to 30 days (UTC, missed runs coalesced); freshness 1 to 300 s; batch interval 0.2 to 60 s.' },
+  { id: 'SY-02b', section: 'Sync', title: 'Choose which tables a pipeline syncs', status: 'new', note: 'Sync covers the whole branch. One unsupported column blocks publication; no table is skipped.' },
+  { id: 'SY-02c', section: 'Sync', title: 'Sync columns of type uuid, jsonb, bytea, float and arrays', status: 'new', note: 'Supported today: boolean, integers, text and varchar, bounded numeric, date, timestamp, timestamptz.' },
+  { id: 'SY-02d', section: 'Sync', title: 'Storage profile and byte and time budgets', status: 'api', note: '--storage-profile and limits exist in the command schema; the console preserves budgets but cannot edit them.' },
+  { id: 'SY-03a', section: 'Sync', title: 'Freshness, lag, log positions, backlog and budgets (current values)', status: 'live', note: 'continuous_status reports published, captured and source positions, lag, backlog, spool and retained WAL.' },
+  { id: 'SY-03b', section: 'Sync', title: 'Lag and throughput history over time', status: 'new', note: 'Only current values are reported; no time series is kept.' },
+  { id: 'SY-04', section: 'Sync', title: 'Run history, run now, cancel a run', status: 'live', note: 'sync runs / run / cancel. Up to 100 runs per request.' },
+  { id: 'SY-05', section: 'Sync', title: 'Per-table row counts and last change', status: 'new', note: 'Runs report a published version and position, not per-table statistics.' },
+  { id: 'SY-07', section: 'Sync', title: 'Pause, resume, reviewed full resync, delete', status: 'live', note: 'sync pause / resume / review-resync / resync / delete, with revision and key fencing.' },
+  { id: 'SY-08', section: 'Sync', title: 'Blocked and pressure states', status: 'live', note: 'Policies report blocked, history loss and pressure at 80% of either capture budget. The console shows raw state strings today.' },
+  { id: 'SY-09', section: 'Sync', title: 'Analytics to PostgreSQL sync', status: 'new', note: 'Reverse sync is deferred in the delivery ledger.' },
 ]
 
 export const backing = (id: string) => BACKING.find((b) => b.id === id)
