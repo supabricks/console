@@ -77,6 +77,14 @@ export const BACKING: Backing[] = [
   { id: 'AN-03b', section: 'Analytics', title: 'Compute profile per session', status: 'api', note: '--resource-profile compact|analytical exists; the console has no selector.' },
   { id: 'AN-03c', section: 'Analytics', title: 'Show what owns each session', status: 'new', note: 'Sessions are listed by ID, branch and version. The session record returned to clients does not say whether a notebook, SQL tab or CLI shell opened it.', issues: [272] },
   { id: 'AN-05', section: 'Analytics', title: 'Spark query history', status: 'new', note: 'Queries have IDs within a session; nothing persists after the session closes.', issues: [273] },
+  { id: 'NB-01', section: 'Notebooks', title: 'Notebook files: list, new, rename, save a copy, download', status: 'live', note: 'Notebooks are .ipynb files in the project. The console lists them flat.' },
+  { id: 'NB-01b', section: 'Notebooks', title: 'Folders, upload, duplicate and delete', status: 'new', note: 'No delete, upload or folder actions in the local console; governed import exists but strips outputs and caps at 22 KB.' },
+  { id: 'NB-02', section: 'Notebooks', title: 'Jupyter editing: code and Markdown cells, run, run all, standard shortcuts', status: 'live', note: 'An embedded JupyterLab notebook widget. Cell source up to 64 KiB.' },
+  { id: 'NB-02b', section: 'Notebooks', title: 'Rich outputs beyond text, HTML and images', status: 'new', note: 'Outputs are limited to text, Markdown, sanitized HTML, PNG and JPEG. Interactive widgets, SVG and JavaScript are not rendered.' },
+  { id: 'NB-03', section: 'Notebooks', title: 'Kernel: start, stop, restart, interrupt, reconnect, restart on the latest version', status: 'live', note: 'Kernel states stopped, starting, ready, busy, interrupting, stopping, failed, lost, expired. A kernel holds an analytical session slot.' },
+  { id: 'NB-05', section: 'Notebooks', title: 'Variable inspector and kernel memory and CPU', status: 'new', note: 'No kernel introspection or resource reporting.' },
+  { id: 'NB-06', section: 'Notebooks', title: 'Python environment: add and remove packages, prepare, adopt, offline bundles', status: 'live', note: 'One managed environment per project with a lock file; running kernels adopt a prepared environment explicitly.' },
+  { id: 'NB-07', section: 'Notebooks', title: 'Autosave and checkpoints', status: 'new', note: 'Saves are explicit and revision-checked. There is no autosave or checkpoint history.' },
 ]
 
 export const backing = (id: string) => BACKING.find((b) => b.id === id)

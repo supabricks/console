@@ -18,6 +18,8 @@ import BackendStatus from '@/pages/BackendStatus'
 import Branches from '@/pages/Branches'
 import DatabaseDetail from '@/pages/DatabaseDetail'
 import Databases from '@/pages/Databases'
+import NotebookEditor from '@/pages/NotebookEditor'
+import Notebooks, { Environment } from '@/pages/Notebooks'
 import ObjectExplorer from '@/pages/ObjectExplorer'
 import SqlEditor from '@/pages/SqlEditor'
 import Sync from '@/pages/Sync'
@@ -37,9 +39,9 @@ const LAKE = [
   { to: '/analytics/sql', label: 'Spark SQL', icon: Sparkles },
   { to: '/analytics/versions', label: 'Versions', icon: Layers },
   { to: '/analytics/sessions', label: 'Sessions', icon: Cpu },
+  { to: '/notebooks', label: 'Notebooks', icon: BookOpen },
 ]
 const LATER = [
-  { label: 'Notebooks', icon: BookOpen },
   { label: 'Catalog', icon: LibraryBig },
 ]
 const DB_TABS = ['Overview', 'Connect', 'API keys', 'Compute', 'Observability', 'Roles', 'Extensions', 'Backups', 'Settings']
@@ -75,8 +77,8 @@ function Shell() {
   }, [])
   const seg = loc.pathname.split('/').filter(Boolean)
   const gaps = BACKING.filter((b) => b.status !== 'live').length
-  const fullBleed = ['tables', 'sql', 'explorer'].includes(seg[0]) || loc.pathname === '/analytics/sql'
-  const scoped = !['backend', 'sync', 'analytics'].includes(seg[0]) && !(seg[0] === 'databases' && !seg[1])
+  const fullBleed = ['tables', 'sql', 'explorer'].includes(seg[0]) || loc.pathname === '/analytics/sql' || (seg[0] === 'notebooks' && !!seg[1] && seg[1] !== 'environment')
+  const scoped = !['backend', 'sync', 'analytics', 'notebooks'].includes(seg[0]) && !(seg[0] === 'databases' && !seg[1])
   const run = (fn: () => void) => { setPalette(false); fn() }
 
   return (
@@ -229,6 +231,9 @@ function Shell() {
             <Route path="/analytics/sql" element={<SqlEditor key="spark" engine="spark" />} />
             <Route path="/analytics/versions" element={<Versions />} />
             <Route path="/analytics/sessions" element={<Sessions />} />
+            <Route path="/notebooks" element={<Notebooks />} />
+            <Route path="/notebooks/environment" element={<Environment />} />
+            <Route path="/notebooks/:name" element={<NotebookEditor />} />
             <Route path="/sync" element={<Sync />} />
             <Route path="/sync/new" element={<SyncCreate />} />
             <Route path="/sync/:id" element={<SyncDetail />} />

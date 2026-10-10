@@ -21,5 +21,5 @@ Built with React, shadcn/ui (Radix + Tailwind) and Recharts.
 Built so far: the PostgreSQL section (databases, database detail, branches,
 table editor, SQL editor, object explorer) Sync (pipeline list, create flow,
 pipeline detail) and Analytics (Spark SQL as an engine in the SQL editor,
-versions, sessions). Notebooks and catalog are disabled in the sidebar until
-they are built.
+versions, sessions) and Notebooks (browser, a Jupyter-style editor, Python
+environment). Catalog is disabled in the sidebar until it is built.

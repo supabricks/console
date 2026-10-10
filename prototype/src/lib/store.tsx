@@ -1,6 +1,8 @@
 import { createContext, useContext, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { API_KEYS, BRANCHES, DATABASES, PIPELINES, SESSIONS } from './data'
+import { NOTEBOOKS, PACKAGES } from './notebooks'
+import type { Notebook, Package } from './notebooks'
 import type { ApiKey, Branch, Database, Pipeline, Session } from './data'
 
 type Store = {
@@ -12,6 +14,10 @@ type Store = {
   setPipelines: (fn: (p: Pipeline[]) => Pipeline[]) => void
   sessions: Session[]
   setSessions: (fn: (s: Session[]) => Session[]) => void
+  notebooks: Notebook[]
+  setNotebooks: (fn: (n: Notebook[]) => Notebook[]) => void
+  packages: Package[]
+  setPackages: (fn: (p: Package[]) => Package[]) => void
   apiKeys: ApiKey[]
   setApiKeys: (fn: (k: ApiKey[]) => ApiKey[]) => void
   dbId: string
@@ -33,6 +39,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [apiKeys, setKeys] = useState(API_KEYS)
   const [pipelines, setPls] = useState(PIPELINES)
   const [sessions, setSes] = useState(SESSIONS)
+  const [notebooks, setNbs] = useState(NOTEBOOKS)
+  const [packages, setPkgs] = useState(PACKAGES)
   const [dbId, setDbIdRaw] = useState('db_app')
   const [branchName, setBranchName] = useState('main')
   const [showBacking, setShowBackingRaw] = useState(() => { try { return localStorage.getItem('sb-backing') === '1' } catch { return false } })
@@ -48,12 +56,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       apiKeys, setApiKeys: (fn) => setKeys(fn),
       pipelines, setPipelines: (fn) => setPls(fn),
       sessions, setSessions: (fn) => setSes(fn),
+      notebooks, setNotebooks: (fn) => setNbs(fn),
+      packages, setPackages: (fn) => setPkgs(fn),
       dbId: db.id,
       setDbId: (id) => { setDbIdRaw(id); setBranchName('main') },
       branchName: branch?.name ?? 'main', setBranchName,
       db, branch, dbBranches, showBacking, setShowBacking,
     }
-  }, [databases, branches, apiKeys, pipelines, sessions, dbId, branchName, showBacking])
+  }, [databases, branches, apiKeys, pipelines, sessions, notebooks, packages, dbId, branchName, showBacking])
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
