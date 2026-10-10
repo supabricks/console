@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { HashRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
-import { BookOpen, Boxes, Check, ChevronRight, ChevronsUpDown, Database, GitBranch, LayoutDashboard, LibraryBig, ListChecks, Moon, RefreshCw, Search, Sparkles, Sun, Tags } from 'lucide-react'
+import { BookOpen, Boxes, Check, ChevronRight, ChevronsUpDown, Database, GitBranch, LayoutDashboard, KeyRound, LibraryBig, ListChecks, LogOut, Moon, RefreshCw, ScrollText, Search, ShieldCheck, Sparkles, Sun, Tags, UserRound, Users } from 'lucide-react'
 import { StatusBadge } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command'
@@ -15,6 +15,9 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { BACKING } from '@/lib/backing'
 import { StoreProvider, useStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
+import { AccessProvider } from '@/lib/access'
+import { CatalogGrants, DataPermissions, ProjectAudit, Roles, RunPermissions } from '@/pages/Access'
+import { AuditLog, Groups, People, ServiceAccounts, SignInSettings } from '@/pages/Admin'
 import { Sessions, Versions } from '@/pages/Analytics'
 import BackendStatus from '@/pages/BackendStatus'
 import Branches from '@/pages/Branches'
@@ -26,6 +29,7 @@ import NotebookEditor from '@/pages/NotebookEditor'
 import Notebooks, { Environment } from '@/pages/Notebooks'
 import ObjectExplorer from '@/pages/ObjectExplorer'
 import Project from '@/pages/Project'
+import SignIn from '@/pages/SignIn'
 import SqlEditor from '@/pages/SqlEditor'
 import Sync from '@/pages/Sync'
 import SyncCreate from '@/pages/SyncCreate'
@@ -62,6 +66,21 @@ const SECTIONS: Section[] = [
     { to: '/catalog/publications', label: 'Publications' },
     { to: '/catalog/shared', label: 'Shared datasets' },
   ] },
+  { id: 'access', label: 'Access', icon: ShieldCheck, tone: 'text-muted-foreground', to: '/access/roles', children: [
+    { to: '/access/roles', label: 'Roles' },
+    { to: '/access/data', label: 'Data permissions' },
+    { to: '/access/runs', label: 'Run permissions' },
+    { to: '/access/catalog', label: 'Catalog grants' },
+    { to: '/access/audit', label: 'Access log' },
+  ] },
+]
+// The installation: who can sign in at all. It sits above every project.
+const ADMIN: (Leaf & { icon: typeof Database })[] = [
+  { to: '/admin/people', label: 'People', icon: UserRound },
+  { to: '/admin/groups', label: 'Groups', icon: Users },
+  { to: '/admin/services', label: 'Service accounts', icon: KeyRound },
+  { to: '/admin/signin', label: 'Sign-in', icon: ShieldCheck },
+  { to: '/admin/audit', label: 'Audit log', icon: ScrollText },
 ]
 const DB_TABS: [string, string][] = [['overview', 'Overview'], ['connect', 'Connect'], ['keys', 'API keys'], ['compute', 'Compute'], ['observability', 'Observability'], ['roles', 'Roles'], ['extensions', 'Extensions'], ['backups', 'Backups'], ['settings', 'Settings']]
 const sectionOf = (p: string) => (/^\/(databases|branches|tables|sql|explorer)/.test(p) ? 'databases' : p.split('/')[1])
@@ -98,7 +117,7 @@ function Shell() {
   const seg = path.split('/').filter(Boolean)
   const gaps = BACKING.filter((b) => b.status !== 'live').length
   const fullBleed = ['tables', 'sql', 'explorer'].includes(seg[0]) || path === '/analytics/sql' || (seg[0] === 'notebooks' && !!seg[1] && seg[1] !== 'environment')
-  const atHome = seg[0] === 'home'
+  const atHome = seg[0] === 'home' || seg[0] === 'admin'
   const inDb = current === 'databases' && !(seg[0] === 'databases' && !seg[1])
   const run = (fn: () => void) => { setPalette(false); fn() }
   const toggle = (id: string) => setOpen((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n })
@@ -132,7 +151,13 @@ function Shell() {
         </SidebarHeader>
         <SidebarContent>
           {atHome ? (
-            <SidebarGroup><SidebarGroupContent><SidebarMenu><SidebarMenuItem><SidebarMenuButton isActive tooltip="Projects"><Boxes /><span>Projects</span></SidebarMenuButton></SidebarMenuItem></SidebarMenu></SidebarGroupContent></SidebarGroup>
+            <>
+            <SidebarGroup className="pb-1"><SidebarGroupContent><SidebarMenu><SidebarMenuItem><SidebarMenuButton asChild isActive={seg[0] === 'home'} tooltip="Projects"><NavLink to="/home"><Boxes /><span>Projects</span></NavLink></SidebarMenuButton></SidebarMenuItem></SidebarMenu></SidebarGroupContent></SidebarGroup>
+            <SidebarGroup className="pt-1">
+              <div className="px-2 pb-1 text-[11px] text-muted-foreground group-data-[collapsible=icon]:hidden">Administration</div>
+              <SidebarGroupContent><SidebarMenu className="gap-0.5">{ADMIN.map((a) => <SidebarMenuItem key={a.to}><SidebarMenuButton asChild isActive={path === a.to} tooltip={a.label}><NavLink to={a.to}><a.icon /><span>{a.label}</span></NavLink></SidebarMenuButton></SidebarMenuItem>)}</SidebarMenu></SidebarGroupContent>
+            </SidebarGroup>
+            </>
           ) : (<>
           {/* Level 0: the project. Everything below belongs to it. */}
           <SidebarGroup className="pb-1">
@@ -151,7 +176,7 @@ function Shell() {
                       </SidebarMenuButton>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className="w-60">
-                      <DropdownMenuLabel className="text-xs text-muted-foreground">Projects on this device</DropdownMenuLabel>
+                      <DropdownMenuLabel className="text-xs text-muted-foreground">Your projects</DropdownMenuLabel>
                       <DropdownMenuItem onClick={() => nav('/overview')}><span className="flex-1 font-medium">sales-analytics</span><Check className="text-primary" /></DropdownMenuItem>
                       <DropdownMenuItem onClick={() => nav('/home')}>finance-ops</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => nav('/home')}>growth</DropdownMenuItem>
@@ -229,13 +254,16 @@ function Shell() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <SidebarMenuButton size="lg" className="gap-2.5">
-                    <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-semibold">LO</span>
-                    <span className="grid min-w-0 flex-1 leading-tight"><span className="truncate font-medium">Local owner</span><span className="truncate text-xs text-muted-foreground">This device</span></span>
+                    <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-semibold">MO</span>
+                    <span className="grid min-w-0 flex-1 leading-tight"><span className="truncate font-medium">Maya Okafor</span><span className="truncate text-xs text-muted-foreground">Administrator</span></span>
                     <ChevronsUpDown className="size-3.5 text-muted-foreground" />
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="top" align="start" className="w-56">
+                  <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">maya.okafor@example.com</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => nav('/admin/people')}><Users /> Administration</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setDark(!dark)}>{dark ? <Sun /> : <Moon />} {dark ? 'Light theme' : 'Dark theme'}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => nav('/signin')}><LogOut /> Sign out</DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuLabel className="text-xs text-muted-foreground">Prototype</DropdownMenuLabel>
                   <DropdownMenuItem onClick={() => setShowBacking(!showBacking)}><Tags /> {showBacking ? 'Hide' : 'Show'} backend tags</DropdownMenuItem>
@@ -252,7 +280,7 @@ function Shell() {
         <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-2 border-b bg-background px-3">
           <SidebarTrigger className="text-muted-foreground" />
           <nav className="flex min-w-0 items-center gap-1.5 text-[13px]" aria-label="Breadcrumb">
-            {atHome ? <span className="font-medium">Projects on this device</span> : (
+            {atHome ? (seg[0] === 'home' ? <span className="font-medium">Projects</span> : <><span className="text-muted-foreground">Administration</span><ChevronRight className="size-3.5 shrink-0 text-border" aria-hidden /><span className="font-medium" aria-current="page">{ADMIN.find((a) => a.to === path)?.label}</span></>) : (
               <>
                 <Link to="/overview" className="shrink-0 text-muted-foreground hover:text-foreground">sales-analytics</Link>
                 {trail.map((t, i) => {
@@ -294,7 +322,7 @@ function Shell() {
             </DropdownMenu>
           )}
           <div className="ml-auto flex items-center gap-1.5">
-            <button onClick={() => setPalette(true)} className="flex h-8 w-56 items-center gap-2 rounded-md border bg-muted/50 px-2.5 text-[13px] text-muted-foreground hover:bg-muted max-xl:w-auto">
+            <button onClick={() => setPalette(true)} className="flex h-8 w-64 items-center gap-2 rounded-md border bg-muted/50 px-2.5 text-[13px] whitespace-nowrap text-muted-foreground hover:bg-muted max-xl:w-auto">
               <Search className="size-3.5" /><span className="max-xl:hidden">Search or jump to</span>
               <kbd className="ml-auto rounded border bg-background px-1.5 text-[11px] max-xl:hidden">Ctrl K</kbd>
             </button>
@@ -328,6 +356,18 @@ function Shell() {
             <Route path="/sync/new" element={<SyncCreate />} />
             <Route path="/sync/:id" element={<SyncDetail />} />
             <Route path="/sync/:id/:tab" element={<SyncDetail />} />
+            <Route path="/access" element={<Navigate to="/access/roles" replace />} />
+            <Route path="/access/roles" element={<Roles />} />
+            <Route path="/access/data" element={<DataPermissions />} />
+            <Route path="/access/runs" element={<RunPermissions />} />
+            <Route path="/access/catalog" element={<CatalogGrants />} />
+            <Route path="/access/audit" element={<ProjectAudit />} />
+            <Route path="/admin" element={<Navigate to="/admin/people" replace />} />
+            <Route path="/admin/people" element={<People />} />
+            <Route path="/admin/groups" element={<Groups />} />
+            <Route path="/admin/services" element={<ServiceAccounts />} />
+            <Route path="/admin/signin" element={<SignInSettings />} />
+            <Route path="/admin/audit" element={<AuditLog />} />
             <Route path="/backend" element={<BackendStatus />} />
           </Routes>
         </main>
@@ -348,6 +388,9 @@ function Shell() {
                 {(s.id === 'databases' ? [{ to: '/databases', label: 'All databases' }, ...DB_TOOLS] : s.children).map((c) => <CommandItem key={c.to} value={`${s.label} ${c.label}`} onSelect={() => run(() => nav(c.to))}><s.icon className={s.tone} />{c.label}</CommandItem>)}
               </CommandGroup>
             ))}
+            <CommandGroup heading="Administration">
+              {ADMIN.map((a) => <CommandItem key={a.to} value={`Administration ${a.label}`} onSelect={() => run(() => nav(a.to))}><a.icon />{a.label}</CommandItem>)}
+            </CommandGroup>
             <CommandSeparator />
             <CommandGroup heading={`Database ${db.name}`}>
               {DB_TABS.map(([id, t]) => <CommandItem key={id} value={`${db.name} ${t}`} onSelect={() => run(() => nav(`/databases/${db.name}/${id}`))}><Database />{t}</CommandItem>)}
@@ -375,7 +418,12 @@ export default function App() {
     <HashRouter>
       <StoreProvider>
         <TooltipProvider delayDuration={150}>
-          <Shell />
+          <AccessProvider>
+            <Routes>
+              <Route path="/signin" element={<SignIn />} />
+              <Route path="*" element={<Shell />} />
+            </Routes>
+          </AccessProvider>
           <Toaster position="bottom-right" />
         </TooltipProvider>
       </StoreProvider>

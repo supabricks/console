@@ -172,8 +172,23 @@ and log budgets, schedule 60 s to 30 days, freshness 1–300 s.
 | OP-04 | Installation settings | Runtime and service health, versions, data directory, resource limits, backup, upgrade | API (CLI-only) |
 | OP-05 | Agents and MCP | Connection snippet for coding agents, tool list | API (CLI-only) |
 
-Out of scope for this prototype: sign-in, access management, administration and
-audit (the governed profile). They can follow once the local console is agreed.
+## Access control (governed server profile)
+
+Identity belongs to the installation and sits beside the projects list; roles and
+grants belong to a project and sit in its Access section.
+
+| ID | Screen | Contents | Backend |
+|---|---|---|---|
+| AC-01 | Sign in (`/signin`) | Single sign-on through the identity provider | Ready |
+| AC-02 | Administration: People | List, search, groups, status, disable; detail with identity, groups and effective access | Server CLI only; email, last sign-in and invitations are new |
+| AC-03 | Administration: Groups | Create, members, what the group grants, delete | Server CLI only; delete and provider sync are new |
+| AC-04 | Administration: Service accounts | Create, issue a token (up to 1 hour, copy once), revoke, disable | Server CLI only; long-lived keys are new |
+| AC-05 | Administration: Sign-in | Identity provider settings, signed-in sessions, sign everyone out | Server CLI only; session listing is new |
+| AC-06 | Access: Roles | Viewer, editor, administrator for a person or group; check someone's access | Ready; custom roles and access explanation are new |
+| AC-07 | Access: Data permissions | Nine capabilities per branch, per person or group | Server CLI only; direct PostgreSQL connections are new |
+| AC-08 | Access: Run permissions | Run notebooks, stop anyone's run, run as another identity for one saved revision | Server CLI only |
+| AC-09 | Access: Catalog grants | Table grants on a publication, reviewed as a plan then applied | Server CLI only; row filters and column masks are new |
+| AC-10 | Audit log (installation) and Access log (project) | Ordered entries with actor, on-behalf-of, action, target, outcome; export | Server CLI only; time, search and filters are new |
 
 ## Reusable components
 
