@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { HashRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
-import { Bell, BookOpen, Boxes, ChartNoAxesColumn, CalendarClock, Check, ChevronRight, ChevronsUpDown, Database, GitBranch, LayoutDashboard, KeyRound, LibraryBig, ListChecks, LogOut, Moon, RefreshCw, ScrollText, Search, ShieldCheck, Sparkles, Sun, Tags, UserRound, Users } from 'lucide-react'
+import { Bell, BookOpen, Boxes, ChartNoAxesColumn, CalendarClock, Check, ChevronRight, ChevronsUpDown, Database, GitBranch, LayoutDashboard, KeyRound, LibraryBig, ListChecks, LogOut, Moon, Server, Settings, RefreshCw, ScrollText, Search, ShieldCheck, Sparkles, Sun, Tags, UserRound, Users } from 'lucide-react'
 import { StatusBadge } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command'
@@ -34,7 +34,10 @@ import NotebookEditor from '@/pages/NotebookEditor'
 import Notebooks, { Environment } from '@/pages/Notebooks'
 import ObjectExplorer from '@/pages/ObjectExplorer'
 import Project from '@/pages/Project'
+import ProjectSettings, { InstallationSettings } from '@/pages/Settings'
 import SignIn from '@/pages/SignIn'
+import Imports, { ImportNew } from '@/pages/Import'
+import Welcome from '@/pages/Welcome'
 import SqlEditor from '@/pages/SqlEditor'
 import Sync from '@/pages/Sync'
 import SyncCreate from '@/pages/SyncCreate'
@@ -50,6 +53,7 @@ const DB_TOOLS: Leaf[] = [
   { to: '/tables', label: 'Table editor' },
   { to: '/sql', label: 'SQL editor' },
   { to: '/explorer', label: 'Object explorer' },
+  { to: '/import', label: 'Import data' },
 ]
 const SECTIONS: Section[] = [
   { id: 'databases', label: 'Database', icon: Database, tone: 'text-oltp', to: '/databases', children: [] },
@@ -98,9 +102,10 @@ const ADMIN: (Leaf & { icon: typeof Database })[] = [
   { to: '/admin/signin', label: 'Sign-in', icon: ShieldCheck },
   { to: '/admin/usage', label: 'Usage', icon: ChartNoAxesColumn },
   { to: '/admin/audit', label: 'Audit log', icon: ScrollText },
+  { to: '/admin/settings', label: 'Server', icon: Server },
 ]
 const DB_TABS: [string, string][] = [['overview', 'Overview'], ['connect', 'Connect'], ['keys', 'API keys'], ['compute', 'Compute'], ['observability', 'Observability'], ['roles', 'Roles'], ['extensions', 'Extensions'], ['backups', 'Backups'], ['settings', 'Settings']]
-const sectionOf = (p: string) => (/^\/(databases|branches|tables|sql|explorer)/.test(p) ? 'databases' : p.split('/')[1])
+const sectionOf = (p: string) => (/^\/(databases|branches|tables|sql|explorer|import)/.test(p) ? 'databases' : p.split('/')[1])
 
 /** Rows meeting columns: the transactional and analytical engines over one dataset. */
 export function Mark({ className }: { className?: string }) {
@@ -135,7 +140,7 @@ function Shell() {
   const seg = path.split('/').filter(Boolean)
   const gaps = BACKING.filter((b) => b.status !== 'live').length
   const fullBleed = ['tables', 'sql', 'explorer'].includes(seg[0]) || path === '/analytics/sql' || (seg[0] === 'notebooks' && !!seg[1] && seg[1] !== 'environment')
-  const atHome = seg[0] === 'home' || seg[0] === 'admin'
+  const atHome = seg[0] === 'home' || seg[0] === 'admin' || seg[0] === 'welcome'
   const inDb = current === 'databases' && !(seg[0] === 'databases' && !seg[1])
   const run = (fn: () => void) => { setPalette(false); fn() }
   const toggle = (id: string) => setOpen((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n })
@@ -148,6 +153,7 @@ function Shell() {
   if (seg[0] === 'overview') trail.push({ label: 'Overview' })
   else if (seg[0] === 'project') trail.push({ label: 'Definition', to: '/project' }, { label: ({ files: 'Files', deploy: 'Deploy', package: 'Package' } as Record<string, string>)[seg[1]] ?? 'Resources' })
   else if (seg[0] === 'usage') trail.push({ label: 'Usage' })
+  else if (seg[0] === 'settings') trail.push({ label: 'Settings' })
   else if (seg[0] === 'backend') trail.push({ label: 'Backend status' })
   else if (sec) {
     trail.push({ label: sec.label, to: sec.to })
@@ -214,6 +220,9 @@ function Shell() {
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={path === '/usage'} tooltip="Usage"><NavLink to="/usage"><ChartNoAxesColumn /><span>Usage</span></NavLink></SidebarMenuButton>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={path === '/settings'} tooltip="Settings"><NavLink to="/settings"><Settings /><span>Settings</span></NavLink></SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -253,7 +262,7 @@ function Shell() {
                             </DropdownMenu>
                             <SidebarMenuSub className="mr-0 ml-3 pr-0">
                               <SidebarMenuSubItem><SidebarMenuSubButton asChild size="sm" isActive={seg[0] === 'databases' && !!seg[1] && seg[2] !== 'backups'}><NavLink to={`/databases/${db.name}`}>Overview</NavLink></SidebarMenuSubButton></SidebarMenuSubItem>
-                              {DB_TOOLS.map((t) => <SidebarMenuSubItem key={t.to}><SidebarMenuSubButton asChild size="sm" isActive={path === t.to}><NavLink to={t.to}>{t.label}</NavLink></SidebarMenuSubButton></SidebarMenuSubItem>)}
+                              {DB_TOOLS.map((t) => <SidebarMenuSubItem key={t.to}><SidebarMenuSubButton asChild size="sm" isActive={path === t.to || path.startsWith(`${t.to}/`)}><NavLink to={t.to}>{t.label}</NavLink></SidebarMenuSubButton></SidebarMenuSubItem>)}
                               <SidebarMenuSubItem><SidebarMenuSubButton asChild size="sm" isActive={seg[0] === 'databases' && seg[2] === 'backups'}><NavLink to={`/databases/${db.name}/backups`}>Backups</NavLink></SidebarMenuSubButton></SidebarMenuSubItem>
                             </SidebarMenuSub>
                           </SidebarMenuSubItem>
@@ -293,6 +302,7 @@ function Shell() {
                   <DropdownMenuLabel className="text-xs text-muted-foreground">Prototype</DropdownMenuLabel>
                   <DropdownMenuItem onClick={() => setShowBacking(!showBacking)}><Tags /> {showBacking ? 'Hide' : 'Show'} backend tags</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => nav('/backend')}><ListChecks /> Backend status</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => nav('/welcome/new-project')}><Sparkles /> Show the first-run screen</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </SidebarMenuItem>
@@ -305,7 +315,7 @@ function Shell() {
         <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-2 border-b bg-background px-3">
           <SidebarTrigger className="text-muted-foreground" />
           <nav className="flex min-w-0 items-center gap-1.5 text-[13px]" aria-label="Breadcrumb">
-            {atHome ? (seg[0] === 'home' ? <span className="font-medium">Projects</span> : <><span className="text-muted-foreground">Administration</span><ChevronRight className="size-3.5 shrink-0 text-border" aria-hidden /><span className="font-medium" aria-current="page">{ADMIN.find((a) => a.to === path)?.label}</span></>) : (
+            {atHome ? (seg[0] === 'home' ? <span className="font-medium">Projects</span> : seg[0] === 'welcome' ? <><Link to="/home" className="text-muted-foreground hover:text-foreground">Projects</Link><ChevronRight className="size-3.5 shrink-0 text-border" aria-hidden /><span className="font-medium" aria-current="page">{seg[1]}</span></> : <><span className="text-muted-foreground">Administration</span><ChevronRight className="size-3.5 shrink-0 text-border" aria-hidden /><span className="font-medium" aria-current="page">{ADMIN.find((a) => a.to === path)?.label}</span></>) : (
               <>
                 <Link to="/overview" className="shrink-0 text-muted-foreground hover:text-foreground">sales-analytics</Link>
                 {trail.map((t, i) => {
@@ -387,6 +397,11 @@ function Shell() {
             <Route path="/sync/new" element={<SyncCreate />} />
             <Route path="/sync/:id" element={<SyncDetail />} />
             <Route path="/sync/:id/:tab" element={<SyncDetail />} />
+            <Route path="/welcome/:name" element={<Welcome />} />
+            <Route path="/settings" element={<ProjectSettings />} />
+            <Route path="/admin/settings" element={<InstallationSettings />} />
+            <Route path="/import" element={<Imports />} />
+            <Route path="/import/new" element={<ImportNew />} />
             <Route path="/usage" element={<Usage />} />
             <Route path="/admin/usage" element={<AllUsage />} />
             <Route path="/alerts" element={<Alerts />} />
@@ -419,6 +434,7 @@ function Shell() {
               <CommandItem onSelect={() => run(() => nav('/overview'))}><LayoutDashboard />Overview</CommandItem>
               <CommandItem onSelect={() => run(() => nav('/project'))}><Boxes />Definition</CommandItem>
               <CommandItem onSelect={() => run(() => nav('/usage'))}><ChartNoAxesColumn />Usage</CommandItem>
+              <CommandItem onSelect={() => run(() => nav('/settings'))}><Settings />Settings</CommandItem>
               <CommandItem onSelect={() => run(() => nav('/home'))}><Boxes />All projects</CommandItem>
             </CommandGroup>
             {SECTIONS.map((s) => (

@@ -155,6 +155,14 @@ export const BACKING: Backing[] = [
   { id: 'UQ-02', section: 'Usage', title: 'Analytical session time by person and job', status: 'new', note: 'A session record has no owner.', issues: [300, 272] },
   { id: 'UQ-03', section: 'Usage', title: 'Limits per project', status: 'new', note: 'Every limit is installation-wide and fixed: two session slots, one incremental capture, 512 MiB buffers.', issues: [300] },
   { id: 'UQ-04', section: 'Usage', title: 'Usage across projects for administrators', status: 'new', note: 'Nothing compares projects or shows which one holds shared capacity.', issues: [300] },
+  { id: 'IM-01', section: 'Import', title: 'Import CSV, TSV, JSON, JSON Lines or Parquet into a new PostgreSQL table', status: 'live', note: 'Inspect, approve a column mapping, load in one transaction with a receipt. 100 MiB a file, 512 MiB staging.' },
+  { id: 'IM-02', section: 'Import', title: 'Import history, cancel and retry', status: 'live', note: 'Jobs belong to the project and appear in the console, CLI and MCP.' },
+  { id: 'IM-03', section: 'Import', title: 'Add rows to an existing table, or replace it', status: 'new', note: 'An import always creates a new table.' },
+  { id: 'IM-04', section: 'Import', title: 'Import from a web address or object storage', status: 'new', note: 'Sources are uploaded files only.' },
+  { id: 'IM-05', section: 'Import', title: 'Import directly into analytical tables', status: 'new', note: 'Every import creates a PostgreSQL table; direct analytical ingestion is planned and not built.' },
+  { id: 'ST-01', section: 'Settings', title: 'Server: version, verify installation, run diagnostics', status: 'api', note: 'supabricks --version, installation verify and doctor exist on the command line; the console has no UI.' },
+  { id: 'ST-02', section: 'Settings', title: 'Project description', status: 'new', note: 'A project has a key and a name; there is nowhere to keep a description.' },
+  { id: 'FR-02', section: 'First run', title: 'Sample tables for a new project', status: 'new', note: 'A new project starts empty. No sample dataset ships with the release.' },
 ]
 
 export const backing = (id: string) => BACKING.find((b) => b.id === id)

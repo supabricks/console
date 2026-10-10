@@ -173,7 +173,7 @@ export default function Home() {
   const [start, setStart] = useState('empty')
   const valid = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,38}[a-zA-Z0-9])?$/.test(name) && !projects.some((p) => p.name === name)
   const rows = projects.filter((p) => p.name.includes(q.toLowerCase()))
-  const openProject = (p: Project) => (p.current ? nav('/overview') : toast.message(`${p.name} opens in its own window`, { description: 'Only sales-analytics has data in this prototype.' }))
+  const openProject = (p: Project) => (p.current ? nav('/overview') : p.created === '2026-10-10' && !p.pipelines ? nav(`/welcome/${p.name}`) : toast.message(`${p.name} opens in its own window`, { description: 'Only sales-analytics has data in this prototype.' }))
 
   return (
     <>
@@ -184,7 +184,7 @@ export default function Home() {
       />
       <div className="mb-3 flex items-center gap-2">
         <div className="relative w-64"><Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" /><Input className="pl-8" placeholder="Filter projects" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-        <span className="text-xs text-muted-foreground">{rows.length} projects on this device</span>
+        <span className="text-xs text-muted-foreground">{rows.length} projects</span>
         <BackingTag id="HM-01b" className="ml-1" />
       </div>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -224,7 +224,7 @@ export default function Home() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button disabled={!valid} onClick={() => { setProjects((ps) => [...ps, { id: `prj_${name}`, name, path: `~/projects/${name}`, databases: 1, pipelines: start === 'sample' ? 1 : 0, notebooks: start === 'sample' ? 1 : 0, lastActive: 'Now', created: '2026-10-10', state: 'running' }]); setOpen(false); setName(''); toast.success(`Project ${name} created`) }}>Create project</Button>
+            <Button disabled={!valid} onClick={() => { setProjects((ps) => [...ps, { id: `prj_${name}`, name, path: `~/projects/${name}`, databases: 1, pipelines: start === 'sample' ? 1 : 0, notebooks: start === 'sample' ? 1 : 0, lastActive: 'Now', created: '2026-10-10', state: 'running' }]); setOpen(false); setName(''); toast.success(`Project ${name} created`); if (start === 'empty') nav(`/welcome/${name}`) }}>Create project</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

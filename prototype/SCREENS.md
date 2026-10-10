@@ -274,3 +274,25 @@ will mark those with a small "preview" tag so reviewers can tell what exists.
 | UQ-02 | Session time by who | People and jobs holding the two analytical slots | New (#300, #272) |
 | UQ-03 | Limits | Server-wide limits and this project's share; per-project limits not available | New (#300) |
 | UQ-04 | Administration: Usage | Disk and capacity divided between projects | New (#300) |
+
+## Import (under a database)
+
+| ID | Screen | Contents | Backend |
+|---|---|---|---|
+| IM-01 | New import | Four steps: file, how it reads, table and columns, load with live progress and a receipt | Ready |
+| IM-02 | Import data | History with result, error and try again | Ready |
+| IM-03 to IM-05 | Not available | Add to an existing table; import from a link or bucket; import straight into analytical tables | New |
+
+## Settings
+
+| ID | Screen | Contents | Backend |
+|---|---|---|---|
+| HM-01b, ST-02 | Project: Settings | Name, description, ID and folder, per-person preferences, services, stop and delete | Rename, stop, delete and description are new; preferences are kept in the browser |
+| ST-01 | Administration: Server | Version, verify installation, upgrade instructions, address, diagnostics, fixed limits | Command line only |
+
+## First run
+
+| ID | Screen | Contents | Backend |
+|---|---|---|---|
+| FR-01 | New project (`/welcome/:name`) | Five guided steps from an empty database to a first analytical query, with what you have and the terminal equivalents | Console only |
+| FR-02 | Sample tables | One-click sample data | New |
