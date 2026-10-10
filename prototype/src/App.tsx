@@ -1,25 +1,27 @@
 import { useEffect, useState } from 'react'
+import type { ReactNode } from 'react'
 import { HashRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
-import { BookOpen, Boxes, Check, LayoutDashboard, Cpu, Layers, ChevronsUpDown, Code2, Database, FolderTree, GitBranch, LibraryBig, ListChecks, Moon, RefreshCw, Search, Sparkles, Sun, Table2, Tags } from 'lucide-react'
+import { BookOpen, Boxes, Check, ChevronRight, ChevronsUpDown, Database, GitBranch, LayoutDashboard, LibraryBig, ListChecks, Moon, RefreshCw, Search, Sparkles, Sun, Tags } from 'lucide-react'
 import { StatusBadge } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import {
-  Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarInset,
-  SidebarMenu, SidebarMenuBadge, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarRail, SidebarTrigger,
+  Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarHeader, SidebarInset,
+  SidebarMenu, SidebarMenuBadge, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, SidebarProvider, SidebarRail, SidebarTrigger,
 } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { BACKING } from '@/lib/backing'
 import { StoreProvider, useStore } from '@/lib/store'
+import { cn } from '@/lib/utils'
 import { Sessions, Versions } from '@/pages/Analytics'
 import BackendStatus from '@/pages/BackendStatus'
 import Branches from '@/pages/Branches'
-import DatabaseDetail from '@/pages/DatabaseDetail'
-import Home, { Overview } from '@/pages/Home'
 import Catalog from '@/pages/Catalog'
+import DatabaseDetail from '@/pages/DatabaseDetail'
 import Databases from '@/pages/Databases'
+import Home, { Overview } from '@/pages/Home'
 import NotebookEditor from '@/pages/NotebookEditor'
 import Notebooks, { Environment } from '@/pages/Notebooks'
 import ObjectExplorer from '@/pages/ObjectExplorer'
@@ -30,23 +32,39 @@ import SyncCreate from '@/pages/SyncCreate'
 import SyncDetail from '@/pages/SyncDetail'
 import TableEditor from '@/pages/TableEditor'
 
-const NAV = [
-  { to: '/databases', label: 'Databases', icon: Database },
-  { to: '/branches', label: 'Branches', icon: GitBranch },
-  { to: '/tables', label: 'Table editor', icon: Table2 },
-  { to: '/sql', label: 'SQL editor', icon: Code2 },
-  { to: '/explorer', label: 'Object explorer', icon: FolderTree },
+type Leaf = { to: string; label: string; match?: (p: string) => boolean }
+type Section = { id: string; label: string; icon: typeof Database; tone: string; to: string; children: Leaf[] }
+
+// Tools that operate on one database. They nest under the selected database.
+const DB_TOOLS: Leaf[] = [
+  { to: '/branches', label: 'Branches' },
+  { to: '/tables', label: 'Table editor' },
+  { to: '/sql', label: 'SQL editor' },
+  { to: '/explorer', label: 'Object explorer' },
 ]
-const LAKE = [
-  { to: '/sync', label: 'Sync', icon: RefreshCw },
-  { to: '/analytics/sql', label: 'Spark SQL', icon: Sparkles },
-  { to: '/analytics/versions', label: 'Versions', icon: Layers },
-  { to: '/analytics/sessions', label: 'Sessions', icon: Cpu },
-  { to: '/notebooks', label: 'Notebooks', icon: BookOpen },
-  { to: '/catalog', label: 'Catalog', icon: LibraryBig },
+const SECTIONS: Section[] = [
+  { id: 'databases', label: 'Database', icon: Database, tone: 'text-oltp', to: '/databases', children: [] },
+  { id: 'sync', label: 'Sync', icon: RefreshCw, tone: 'text-muted-foreground', to: '/sync', children: [
+    { to: '/sync', label: 'Pipelines', match: (p) => p.startsWith('/sync') && p !== '/sync/new' },
+    { to: '/sync/new', label: 'New pipeline' },
+  ] },
+  { id: 'analytics', label: 'Analytics', icon: Sparkles, tone: 'text-olap', to: '/analytics/sql', children: [
+    { to: '/analytics/sql', label: 'Spark SQL' },
+    { to: '/analytics/versions', label: 'Versions' },
+    { to: '/analytics/sessions', label: 'Sessions' },
+  ] },
+  { id: 'notebooks', label: 'Notebooks', icon: BookOpen, tone: 'text-olap', to: '/notebooks', children: [
+    { to: '/notebooks', label: 'All notebooks', match: (p) => p.startsWith('/notebooks') && p !== '/notebooks/environment' },
+    { to: '/notebooks/environment', label: 'Python environment' },
+  ] },
+  { id: 'catalog', label: 'Catalog', icon: LibraryBig, tone: 'text-olap', to: '/catalog', children: [
+    { to: '/catalog/explorer', label: 'Tables', match: (p) => p === '/catalog' || p === '/catalog/explorer' },
+    { to: '/catalog/publications', label: 'Publications' },
+    { to: '/catalog/shared', label: 'Shared datasets' },
+  ] },
 ]
-const LATER: { label: string; icon: typeof BookOpen }[] = []
-const DB_TABS = ['Overview', 'Connect', 'API keys', 'Compute', 'Observability', 'Roles', 'Extensions', 'Backups', 'Settings']
+const DB_TABS: [string, string][] = [['overview', 'Overview'], ['connect', 'Connect'], ['keys', 'API keys'], ['compute', 'Compute'], ['observability', 'Observability'], ['roles', 'Roles'], ['extensions', 'Extensions'], ['backups', 'Backups'], ['settings', 'Settings']]
+const sectionOf = (p: string) => (/^\/(databases|branches|tables|sql|explorer)/.test(p) ? 'databases' : p.split('/')[1])
 
 /** Rows meeting columns: the transactional and analytical engines over one dataset. */
 export function Mark({ className }: { className?: string }) {
@@ -58,16 +76,16 @@ export function Mark({ className }: { className?: string }) {
   )
 }
 
-function Crumb({ children }: { children: React.ReactNode }) {
-  return <><span className="text-border select-none" aria-hidden>/</span>{children}</>
-}
-
 function Shell() {
-  const { databases, setDbId, db, dbBranches, branchName, setBranchName, showBacking, setShowBacking } = useStore()
+  const { databases, setDbId, db, dbBranches, branchName, setBranchName, showBacking, setShowBacking, pipelines } = useStore()
   const loc = useLocation()
   const nav = useNavigate()
+  const path = loc.pathname
   const [dark, setDark] = useState(() => { try { return localStorage.getItem('sb-theme') === 'dark' } catch { return false } })
   const [palette, setPalette] = useState(false)
+  const current = sectionOf(path)
+  const [open, setOpen] = useState<Set<string>>(new Set([current]))
+  useEffect(() => { setOpen(new Set([current])) }, [current])
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
     try { localStorage.setItem('sb-theme', dark ? 'dark' : 'light') } catch { /* storage unavailable */ }
@@ -77,81 +95,133 @@ function Shell() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
-  const seg = loc.pathname.split('/').filter(Boolean)
+  const seg = path.split('/').filter(Boolean)
   const gaps = BACKING.filter((b) => b.status !== 'live').length
-  const fullBleed = ['tables', 'sql', 'explorer'].includes(seg[0]) || loc.pathname === '/analytics/sql' || (seg[0] === 'notebooks' && !!seg[1] && seg[1] !== 'environment')
-  const scoped = !['backend', 'sync', 'analytics', 'notebooks', 'catalog', 'home', 'overview', 'project'].includes(seg[0]) && !(seg[0] === 'databases' && !seg[1])
+  const fullBleed = ['tables', 'sql', 'explorer'].includes(seg[0]) || path === '/analytics/sql' || (seg[0] === 'notebooks' && !!seg[1] && seg[1] !== 'environment')
+  const atHome = seg[0] === 'home'
+  const inDb = current === 'databases' && !(seg[0] === 'databases' && !seg[1])
   const run = (fn: () => void) => { setPalette(false); fn() }
+  const toggle = (id: string) => setOpen((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n })
+  const active = (l: Leaf) => (l.match ? l.match(path) : path === l.to || path.startsWith(`${l.to}/`))
+  const pickDb = (id: string, name: string) => { setDbId(id); if (seg[0] === 'databases') nav(`/databases/${name}${seg[2] ? `/${seg[2]}` : ''}`) }
+
+  // The path from the project down to the page in view.
+  const sec = SECTIONS.find((s) => s.id === current)
+  const trail: { label: ReactNode; to?: string }[] = []
+  if (seg[0] === 'overview') trail.push({ label: 'Overview' })
+  else if (seg[0] === 'project') trail.push({ label: 'Definition', to: '/project' }, { label: ({ files: 'Files', deploy: 'Deploy', package: 'Package' } as Record<string, string>)[seg[1]] ?? 'Resources' })
+  else if (seg[0] === 'backend') trail.push({ label: 'Backend status' })
+  else if (sec) {
+    trail.push({ label: sec.label, to: sec.to })
+    if (current === 'databases') {
+      if (!inDb) trail.push({ label: 'All databases' })
+      else trail.push({ label: 'db' }, { label: seg[0] === 'databases' ? (DB_TABS.find(([id]) => id === (seg[2] ?? 'overview'))?.[1] ?? 'Overview') : DB_TOOLS.find((t) => t.to === `/${seg[0]}`)?.label })
+    } else if (seg[0] === 'sync' && seg[1] && seg[1] !== 'new') { const p = pipelines.find((x) => x.id === seg[1]); trail.push({ label: 'Pipelines', to: '/sync' }, { label: p ? <>{databases.find((d) => d.id === p.db)?.name} / <span className="font-mono text-[12.5px]">{p.branch}</span></> : 'Pipeline' }) }
+    else if (seg[0] === 'notebooks' && seg[1] && seg[1] !== 'environment') trail.push({ label: 'All notebooks', to: '/notebooks' }, { label: decodeURIComponent(seg[1]) })
+    else trail.push({ label: sec.children.find(active)?.label ?? sec.label })
+  }
 
   return (
     <SidebarProvider>
       <Sidebar collapsible="icon">
-        <SidebarHeader className="h-12 justify-center border-b">
-          <Link to="/overview" className="flex items-center gap-2.5 px-1.5 group-data-[collapsible=icon]:px-0.5">
+        <SidebarHeader className="gap-0 border-b p-0">
+          <Link to="/home" className="flex h-12 items-center gap-2.5 px-3.5 group-data-[collapsible=icon]:px-2.5">
             <Mark className="size-6 shrink-0" />
             <span className="text-[17px] font-semibold tracking-tight group-data-[collapsible=icon]:hidden">supabricks</span>
           </Link>
         </SidebarHeader>
-        <SidebarContent className="pt-1">
-          <SidebarGroup className="pb-0">
+        <SidebarContent>
+          {atHome ? (
+            <SidebarGroup><SidebarGroupContent><SidebarMenu><SidebarMenuItem><SidebarMenuButton isActive tooltip="Projects"><Boxes /><span>Projects</span></SidebarMenuButton></SidebarMenuItem></SidebarMenu></SidebarGroupContent></SidebarGroup>
+          ) : (<>
+          {/* Level 0: the project. Everything below belongs to it. */}
+          <SidebarGroup className="pb-1">
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={loc.pathname === '/overview'} tooltip="Overview">
-                    <NavLink to="/overview"><LayoutDashboard /><span>Overview</span></NavLink>
-                  </SidebarMenuButton>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <SidebarMenuButton size="lg" tooltip="Project: sales-analytics" className="gap-2.5 border bg-background shadow-xs hover:bg-background">
+                        <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-foreground text-background"><Boxes className="size-4" /></span>
+                        <span className="grid min-w-0 flex-1 leading-tight">
+                          <span className="text-[11px] text-muted-foreground">Project</span>
+                          <span className="truncate font-semibold">sales-analytics</span>
+                        </span>
+                        <ChevronsUpDown className="size-3.5 text-muted-foreground" />
+                      </SidebarMenuButton>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-60">
+                      <DropdownMenuLabel className="text-xs text-muted-foreground">Projects on this device</DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => nav('/overview')}><span className="flex-1 font-medium">sales-analytics</span><Check className="text-primary" /></DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => nav('/home')}>finance-ops</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => nav('/home')}>growth</DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => nav('/home')}>All projects</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={loc.pathname.startsWith('/project')} tooltip="Project">
-                    <NavLink to="/project"><Boxes /><span>Project</span></NavLink>
-                  </SidebarMenuButton>
+                  <SidebarMenuButton asChild isActive={path === '/overview'} tooltip="Overview"><NavLink to="/overview"><LayoutDashboard /><span>Overview</span></NavLink></SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={path.startsWith('/project')} tooltip="Definition"><NavLink to="/project"><Boxes /><span>Definition</span></NavLink></SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-          <SidebarGroup>
-            <SidebarGroupLabel className="gap-2"><span className="size-1.5 rounded-full bg-oltp" />Database</SidebarGroupLabel>
+
+          {/* Level 1: sections. Level 2: their pages. Level 3: a database's tools. */}
+          <SidebarGroup className="pt-1">
+            <div className="px-2 pb-1 text-[11px] text-muted-foreground group-data-[collapsible=icon]:hidden">In this project</div>
             <SidebarGroupContent>
-              <SidebarMenu>
-                {NAV.map((n) => (
-                  <SidebarMenuItem key={n.to}>
-                    <SidebarMenuButton asChild isActive={loc.pathname.startsWith(n.to)} tooltip={n.label}>
-                      <NavLink to={n.to}><n.icon /><span>{n.label}</span></NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+              <SidebarMenu className="gap-0.5">
+                {SECTIONS.map((s) => {
+                  const isOpen = open.has(s.id), here = current === s.id
+                  return (
+                    <SidebarMenuItem key={s.id}>
+                      <SidebarMenuButton tooltip={s.label} onClick={() => (here ? toggle(s.id) : nav(s.to))} className={cn(here ? 'font-semibold' : 'font-medium text-sidebar-foreground/80')} aria-expanded={isOpen}>
+                        <s.icon className={s.tone} /><span>{s.label}</span>
+                        <ChevronRight className={cn('ml-auto size-3.5! text-muted-foreground transition-transform', isOpen && 'rotate-90')} />
+                      </SidebarMenuButton>
+                      {isOpen && s.id !== 'databases' && (
+                        <SidebarMenuSub className="mr-0 pr-0">
+                          {s.children.map((c) => <SidebarMenuSubItem key={c.to}><SidebarMenuSubButton asChild isActive={active(c)}><NavLink to={c.to}>{c.label}</NavLink></SidebarMenuSubButton></SidebarMenuSubItem>)}
+                        </SidebarMenuSub>
+                      )}
+                      {isOpen && s.id === 'databases' && (
+                        <SidebarMenuSub className="mr-0 pr-0">
+                          <SidebarMenuSubItem><SidebarMenuSubButton asChild isActive={path === '/databases'}><NavLink to="/databases">All databases</NavLink></SidebarMenuSubButton></SidebarMenuSubItem>
+                          <SidebarMenuSubItem>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger className={cn('flex h-7 w-full items-center gap-2 rounded-md px-2 text-[13px] outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring', inDb && 'font-medium')}>
+                                <span className={cn('size-2 shrink-0 rounded-full', db.state === 'running' ? 'bg-success' : 'border-[1.5px] border-muted-foreground')} />
+                                <span className="truncate">{db.name}</span><ChevronsUpDown className="ml-auto size-3 text-muted-foreground" />
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="start" className="w-56">
+                                <DropdownMenuLabel className="text-xs text-muted-foreground">Work in database</DropdownMenuLabel>
+                                {databases.map((d) => <DropdownMenuItem key={d.id} onClick={() => pickDb(d.id, d.name)}><span className="flex-1 font-medium">{d.name}</span><StatusBadge status={d.state} />{d.id === db.id && <Check className="text-primary" />}</DropdownMenuItem>)}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                            <SidebarMenuSub className="mr-0 ml-3 pr-0">
+                              <SidebarMenuSubItem><SidebarMenuSubButton asChild size="sm" isActive={seg[0] === 'databases' && !!seg[1]}><NavLink to={`/databases/${db.name}`}>Overview</NavLink></SidebarMenuSubButton></SidebarMenuSubItem>
+                              {DB_TOOLS.map((t) => <SidebarMenuSubItem key={t.to}><SidebarMenuSubButton asChild size="sm" isActive={path === t.to}><NavLink to={t.to}>{t.label}</NavLink></SidebarMenuSubButton></SidebarMenuSubItem>)}
+                            </SidebarMenuSub>
+                          </SidebarMenuSubItem>
+                        </SidebarMenuSub>
+                      )}
+                    </SidebarMenuItem>
+                  )
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-          <SidebarGroup>
-            <SidebarGroupLabel className="gap-2"><span className="size-1.5 rounded-full bg-olap" />Lakehouse</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {LAKE.map((n) => (
-                  <SidebarMenuItem key={n.to}>
-                    <SidebarMenuButton asChild isActive={loc.pathname.startsWith(n.to)} tooltip={n.label}>
-                      <NavLink to={n.to}><n.icon /><span>{n.label}</span></NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-                {LATER.map((n) => (
-                  <SidebarMenuItem key={n.label}>
-                    <SidebarMenuButton disabled tooltip={`${n.label} is not in this prototype yet`} className="opacity-45">
-                      <n.icon /><span>{n.label}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          </>)}
         </SidebarContent>
         <SidebarFooter>
           <SidebarMenu>
             {showBacking && (
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={loc.pathname === '/backend'} tooltip="Backend status">
-                  <NavLink to="/backend"><ListChecks /><span>Backend status</span></NavLink>
-                </SidebarMenuButton>
+                <SidebarMenuButton asChild isActive={path === '/backend'} tooltip="Backend status"><NavLink to="/backend"><ListChecks /><span>Backend status</span></NavLink></SidebarMenuButton>
                 <SidebarMenuBadge>{gaps}</SidebarMenuBadge>
               </SidebarMenuItem>
             )}
@@ -159,11 +229,8 @@ function Shell() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <SidebarMenuButton size="lg" className="gap-2.5">
-                    <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-foreground text-[11px] font-semibold text-background">LO</span>
-                    <span className="grid min-w-0 flex-1 leading-tight">
-                      <span className="truncate font-medium">Local owner</span>
-                      <span className="truncate text-xs text-muted-foreground">This device</span>
-                    </span>
+                    <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-semibold">LO</span>
+                    <span className="grid min-w-0 flex-1 leading-tight"><span className="truncate font-medium">Local owner</span><span className="truncate text-xs text-muted-foreground">This device</span></span>
                     <ChevronsUpDown className="size-3.5 text-muted-foreground" />
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
@@ -184,67 +251,52 @@ function Shell() {
       <SidebarInset className="min-w-0">
         <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-2 border-b bg-background px-3">
           <SidebarTrigger className="text-muted-foreground" />
-          <nav className="flex min-w-0 items-center gap-2 text-[13px]" aria-label="Context">
-            {seg[0] === 'home' ? <span className="font-medium">This device</span> : (
-              <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-md px-1.5 py-1 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
-                  <span className={scoped ? 'text-muted-foreground' : 'font-medium'}>sales-analytics</span><ChevronsUpDown className="size-3 text-muted-foreground" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-60">
-                  <DropdownMenuLabel className="text-xs text-muted-foreground">Projects</DropdownMenuLabel>
-                  <DropdownMenuItem onClick={() => nav('/overview')}><span className="flex-1 font-medium">sales-analytics</span><Check className="text-primary" /></DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => nav('/home')}>finance-ops</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => nav('/home')}>growth</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => nav('/home')}>All projects</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-            {scoped && (
+          <nav className="flex min-w-0 items-center gap-1.5 text-[13px]" aria-label="Breadcrumb">
+            {atHome ? <span className="font-medium">Projects on this device</span> : (
               <>
-                <Crumb>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-md px-1.5 py-1 font-medium hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
-                      <Database className="size-3.5 text-oltp" />{db.name}<ChevronsUpDown className="size-3 text-muted-foreground" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-60">
-                      <DropdownMenuLabel className="text-xs text-muted-foreground">Databases</DropdownMenuLabel>
-                      {databases.map((d) => (
-                        <DropdownMenuItem key={d.id} onClick={() => { setDbId(d.id); if (seg[0] === 'databases') nav(`/databases/${d.name}${seg[2] ? `/${seg[2]}` : ''}`) }}>
-                          <span className="flex-1 font-medium">{d.name}</span><StatusBadge status={d.state} />{d.id === db.id && <Check className="text-primary" />}
-                        </DropdownMenuItem>
-                      ))}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => nav('/databases')}>All databases</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </Crumb>
-                <Crumb>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className="flex min-w-0 items-center gap-1.5 rounded-md px-1.5 py-1 font-medium hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
-                      <GitBranch className="size-3.5 text-muted-foreground" /><span className="truncate font-mono text-[12.5px]">{branchName}</span><ChevronsUpDown className="size-3 text-muted-foreground" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-72">
-                      <DropdownMenuLabel className="text-xs text-muted-foreground">Branches of {db.name}</DropdownMenuLabel>
-                      {dbBranches.map((b) => (
-                        <DropdownMenuItem key={b.id} onClick={() => setBranchName(b.name)}>
-                          <span className="min-w-0 flex-1 truncate font-mono text-[12.5px]">{b.name}</span>
-                          {b.isDefault && <span className="text-xs text-muted-foreground">default</span>}
-                          {b.name === branchName && <Check className="text-primary" />}
-                        </DropdownMenuItem>
-                      ))}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => nav('/branches')}>Manage branches</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </Crumb>
+                <Link to="/overview" className="shrink-0 text-muted-foreground hover:text-foreground">sales-analytics</Link>
+                {trail.map((t, i) => {
+                  const last = i === trail.length - 1
+                  return (
+                    <span key={i} className="flex min-w-0 items-center gap-1.5">
+                      <ChevronRight className="size-3.5 shrink-0 text-border" aria-hidden />
+                      {t.label === 'db' ? (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-md px-1.5 py-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+                            <Database className="size-3.5 text-oltp" />{db.name}<ChevronsUpDown className="size-3" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start" className="w-56">
+                            {databases.map((d) => <DropdownMenuItem key={d.id} onClick={() => pickDb(d.id, d.name)}><span className="flex-1 font-medium">{d.name}</span><StatusBadge status={d.state} />{d.id === db.id && <Check className="text-primary" />}</DropdownMenuItem>)}
+                            <DropdownMenuSeparator /><DropdownMenuItem onClick={() => nav('/databases')}>All databases</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ) : t.to && !last ? <Link to={t.to} className="truncate text-muted-foreground hover:text-foreground">{t.label}</Link> : <span className={cn('truncate', last ? 'font-medium' : 'text-muted-foreground')} aria-current={last ? 'page' : undefined}>{t.label}</span>}
+                    </span>
+                  )
+                })}
               </>
             )}
           </nav>
+          {inDb && (
+            <DropdownMenu>
+              <DropdownMenuTrigger className="ml-2 flex min-w-0 items-center gap-1.5 rounded-md border px-2 py-1 text-[13px] hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+                <GitBranch className="size-3.5 text-muted-foreground" /><span className="text-muted-foreground">Branch</span><span className="truncate font-mono text-[12.5px] font-medium">{branchName}</span><ChevronsUpDown className="size-3 text-muted-foreground" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-72">
+                <DropdownMenuLabel className="text-xs text-muted-foreground">Branches of {db.name}</DropdownMenuLabel>
+                {dbBranches.map((b) => (
+                  <DropdownMenuItem key={b.id} onClick={() => setBranchName(b.name)}>
+                    <span className="min-w-0 flex-1 truncate font-mono text-[12.5px]">{b.name}</span>{b.isDefault && <span className="text-xs text-muted-foreground">default</span>}{b.name === branchName && <Check className="text-primary" />}
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator /><DropdownMenuItem onClick={() => nav('/branches')}>Manage branches</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
           <div className="ml-auto flex items-center gap-1.5">
-            <button onClick={() => setPalette(true)} className="flex h-8 w-64 items-center gap-2 rounded-md border bg-muted/50 px-2.5 text-[13px] text-muted-foreground hover:bg-muted max-lg:w-auto">
-              <Search className="size-3.5" /><span className="max-lg:hidden">Search or jump to</span>
-              <kbd className="ml-auto rounded border bg-background px-1.5 text-[11px] max-lg:hidden">Ctrl K</kbd>
+            <button onClick={() => setPalette(true)} className="flex h-8 w-56 items-center gap-2 rounded-md border bg-muted/50 px-2.5 text-[13px] text-muted-foreground hover:bg-muted max-xl:w-auto">
+              <Search className="size-3.5" /><span className="max-xl:hidden">Search or jump to</span>
+              <kbd className="ml-auto rounded border bg-background px-1.5 text-[11px] max-xl:hidden">Ctrl K</kbd>
             </button>
             <Button variant="ghost" size="icon-sm" aria-label="Toggle theme" className="text-muted-foreground" onClick={() => setDark(!dark)}>{dark ? <Sun /> : <Moon />}</Button>
           </div>
@@ -254,6 +306,8 @@ function Shell() {
             <Route path="/" element={<Navigate to="/overview" replace />} />
             <Route path="/home" element={<Home />} />
             <Route path="/overview" element={<Overview />} />
+            <Route path="/project" element={<Project />} />
+            <Route path="/project/:tab" element={<Project />} />
             <Route path="/databases" element={<Databases />} />
             <Route path="/databases/:dbName" element={<DatabaseDetail />} />
             <Route path="/databases/:dbName/:tab" element={<DatabaseDetail />} />
@@ -270,8 +324,6 @@ function Shell() {
             <Route path="/notebooks/:name" element={<NotebookEditor />} />
             <Route path="/catalog" element={<Catalog />} />
             <Route path="/catalog/:tab" element={<Catalog />} />
-            <Route path="/project" element={<Project />} />
-            <Route path="/project/:tab" element={<Project />} />
             <Route path="/sync" element={<Sync />} />
             <Route path="/sync/new" element={<SyncCreate />} />
             <Route path="/sync/:id" element={<SyncDetail />} />
@@ -283,33 +335,35 @@ function Shell() {
 
       <CommandDialog open={palette} onOpenChange={setPalette} title="Search" description="Jump to a page, database or branch">
         <Command>
-        <CommandInput placeholder="Search pages, databases, branches…" />
-        <CommandList>
-          <CommandEmpty>Nothing matches that.</CommandEmpty>
-          <CommandGroup heading="Go to">
-            {[{ to: '/overview', label: 'Overview', icon: LayoutDashboard }, { to: '/project', label: 'Project', icon: Boxes }, ...NAV, ...LAKE, { to: '/home', label: 'All projects', icon: LayoutDashboard }].map((n) => <CommandItem key={n.to} onSelect={() => run(() => nav(n.to))}><n.icon />{n.label}</CommandItem>)}
-            <CommandItem onSelect={() => run(() => nav('/sync/new'))}><RefreshCw />New sync pipeline</CommandItem>
-          </CommandGroup>
-          <CommandSeparator />
-          <CommandGroup heading={`Database ${db.name}`}>
-            {DB_TABS.map((t) => (
-              <CommandItem key={t} value={`${db.name} ${t}`} onSelect={() => run(() => nav(`/databases/${db.name}/${t === 'API keys' ? 'keys' : t.toLowerCase()}`))}><Database />{t}</CommandItem>
+          <CommandInput placeholder="Search pages, databases, branches…" />
+          <CommandList>
+            <CommandEmpty>Nothing matches that.</CommandEmpty>
+            <CommandGroup heading="Project">
+              <CommandItem onSelect={() => run(() => nav('/overview'))}><LayoutDashboard />Overview</CommandItem>
+              <CommandItem onSelect={() => run(() => nav('/project'))}><Boxes />Definition</CommandItem>
+              <CommandItem onSelect={() => run(() => nav('/home'))}><Boxes />All projects</CommandItem>
+            </CommandGroup>
+            {SECTIONS.map((s) => (
+              <CommandGroup key={s.id} heading={s.label}>
+                {(s.id === 'databases' ? [{ to: '/databases', label: 'All databases' }, ...DB_TOOLS] : s.children).map((c) => <CommandItem key={c.to} value={`${s.label} ${c.label}`} onSelect={() => run(() => nav(c.to))}><s.icon className={s.tone} />{c.label}</CommandItem>)}
+              </CommandGroup>
             ))}
-          </CommandGroup>
-          <CommandSeparator />
-          <CommandGroup heading="Switch branch">
-            {dbBranches.map((b) => <CommandItem key={b.id} value={`branch ${b.name}`} onSelect={() => run(() => setBranchName(b.name))}><GitBranch /><span className="font-mono text-[12.5px]">{b.name}</span></CommandItem>)}
-          </CommandGroup>
-          <CommandSeparator />
-          <CommandGroup heading="Switch database">
-            {databases.map((d) => <CommandItem key={d.id} value={`database ${d.name}`} onSelect={() => run(() => { setDbId(d.id); nav(`/databases/${d.name}`) })}><Database />{d.name}</CommandItem>)}
-          </CommandGroup>
-          <CommandSeparator />
-          <CommandGroup heading="Preferences">
-            <CommandItem onSelect={() => run(() => setDark(!dark))}>{dark ? <Sun /> : <Moon />}Switch to {dark ? 'light' : 'dark'} theme</CommandItem>
-            <CommandItem onSelect={() => run(() => setShowBacking(!showBacking))}><Tags />{showBacking ? 'Hide' : 'Show'} backend tags</CommandItem>
-          </CommandGroup>
-        </CommandList>
+            <CommandSeparator />
+            <CommandGroup heading={`Database ${db.name}`}>
+              {DB_TABS.map(([id, t]) => <CommandItem key={id} value={`${db.name} ${t}`} onSelect={() => run(() => nav(`/databases/${db.name}/${id}`))}><Database />{t}</CommandItem>)}
+            </CommandGroup>
+            <CommandGroup heading="Switch branch">
+              {dbBranches.map((b) => <CommandItem key={b.id} value={`branch ${b.name}`} onSelect={() => run(() => setBranchName(b.name))}><GitBranch /><span className="font-mono text-[12.5px]">{b.name}</span></CommandItem>)}
+            </CommandGroup>
+            <CommandGroup heading="Switch database">
+              {databases.map((d) => <CommandItem key={d.id} value={`database ${d.name}`} onSelect={() => run(() => { setDbId(d.id); nav(`/databases/${d.name}`) })}><Database />{d.name}</CommandItem>)}
+            </CommandGroup>
+            <CommandSeparator />
+            <CommandGroup heading="Preferences">
+              <CommandItem onSelect={() => run(() => setDark(!dark))}>{dark ? <Sun /> : <Moon />}Switch to {dark ? 'light' : 'dark'} theme</CommandItem>
+              <CommandItem onSelect={() => run(() => setShowBacking(!showBacking))}><Tags />{showBacking ? 'Hide' : 'Show'} backend tags</CommandItem>
+            </CommandGroup>
+          </CommandList>
         </Command>
       </CommandDialog>
     </SidebarProvider>

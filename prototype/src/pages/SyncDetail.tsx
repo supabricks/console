@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
-import { AlertOctagon, ArrowLeft, ChevronRight, Coffee, Database, Layers, MoreHorizontal, Pause, Play, RefreshCw } from 'lucide-react'
+import { AlertOctagon, ChevronRight, Coffee, Database, Layers, MoreHorizontal, Pause, Play, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { MetricChart, timeAxis } from '@/components/charts'
 import { BackingTag, ConfirmDelete, Section, Stat, StatusBadge } from '@/components/common'
@@ -211,7 +211,6 @@ export default function SyncDetail() {
 
   return (
     <>
-      <button onClick={() => nav('/sync')} className="mb-3 flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground"><ArrowLeft className="size-3.5" /> Sync</button>
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3 pb-5">
         <div className="min-w-0">
           <div className="flex items-center gap-3">

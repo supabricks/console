@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { AlertTriangle, ArrowLeft, Check, CheckCircle2, ChevronRight, XCircle } from 'lucide-react'
+import { AlertTriangle, Check, CheckCircle2, ChevronRight, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { BackingTag } from '@/components/common'
 import { ModeCards, MODES, ModeSettings, Route } from '@/components/sync-parts'
@@ -53,7 +53,6 @@ export default function SyncCreate() {
 
   return (
     <div className="mx-auto max-w-[1040px]">
-      <button onClick={() => nav('/sync')} className="mb-3 flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground"><ArrowLeft className="size-3.5" /> Sync</button>
       <h1 className="text-[1.6rem] leading-tight font-semibold tracking-tight">New pipeline</h1>
       <p className="mt-1.5 text-muted-foreground">Publish a PostgreSQL branch as Delta tables.</p>
 
