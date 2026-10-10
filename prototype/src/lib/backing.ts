@@ -142,6 +142,15 @@ export const BACKING: Backing[] = [
   { id: 'JB-05', section: 'Jobs', title: 'Parameters for notebooks and saved queries', status: 'new', note: 'Notebooks and saved queries take no parameters.', issues: [297] },
   { id: 'JB-06', section: 'Jobs', title: 'Run a job as a service account', status: 'new', note: 'The act-as grant lets a person run one saved revision as another principal; nothing lets a schedule do so.', issues: [297] },
   { id: 'JB-07', section: 'Jobs', title: 'Tell people when a job fails and when it recovers', status: 'new', note: 'No alerting or notification delivery exists.', issues: [298] },
+  { id: 'AL-01', section: 'Alerts', title: 'Open and resolved alerts for a project, with the resource each concerns', status: 'new', note: 'Health is visible only on request, per feature. Nothing evaluates a condition over time or keeps a list of alerts.', issues: [298] },
+  { id: 'AL-02', section: 'Alerts', title: 'Built-in rules: turn on or off, set the threshold, severity and recipients', status: 'new', note: 'No rule evaluation exists.', issues: [298] },
+  { id: 'AL-03', section: 'Alerts', title: 'Acknowledge and mute an alert', status: 'new', note: 'No alert state exists.', issues: [298] },
+  { id: 'AL-04', section: 'Alerts', title: 'Destinations: webhook, email and in-console groups, with a delivery log and test send', status: 'new', note: 'No notification delivery exists.', issues: [298] },
+  { id: 'AL-05', section: 'Alerts', title: 'Rules that depend on a reading over time (lag, connections, session slots)', status: 'new', note: 'These need metric history as well as alerting.', issues: [298, 247, 267] },
+  { id: 'SC-01', section: 'Secrets', title: 'Secret store: create, replace and delete write-only values', status: 'new', note: 'There is no store for user credentials.', issues: [299] },
+  { id: 'SC-02', section: 'Secrets', title: 'Read a secret by name in a notebook or job, redacted in outputs and logs', status: 'new', note: 'No runtime API, and governed runs have no outside network today.', issues: [299] },
+  { id: 'SC-03', section: 'Secrets', title: 'Who may use and who may manage each secret, and a record of every read', status: 'new', note: 'No grants or audit entries for secrets.', issues: [299] },
+  { id: 'SC-04', section: 'Secrets', title: 'A project declares the secret names it needs; missing ones are reported', status: 'new', note: 'supabricks.toml has no secret requirement, so apply cannot report what is missing.', issues: [299] },
 ]
 
 export const backing = (id: string) => BACKING.find((b) => b.id === id)

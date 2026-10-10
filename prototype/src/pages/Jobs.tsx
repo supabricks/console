@@ -80,7 +80,7 @@ function RunSheet({ run, onClose }: { run: JobRun | null; onClose: () => void })
   const resolved = (v: string) => v.replace('{{ run.date }}', '2026-10-09').replace('{{ run.started_at }}', '2026-10-10T02:30:00Z').replace('{{ data.version }}', String(r?.version ?? ''))
   return (
     <Sheet open={!!r} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent className="w-full gap-0 overflow-y-auto sm:max-w-xl">
+      <SheetContent className="gap-0 overflow-y-auto data-[side=right]:w-full data-[side=right]:sm:max-w-xl">
         {r && job && (
           <>
             <SheetHeader>

@@ -89,7 +89,7 @@ export function People() {
       <p className="mt-2 text-xs text-muted-foreground">Disabling a person ends their sessions at once and keeps their roles and grants, so enabling them restores the same access. <BackingTag id="AC-02" className="ml-1" /></p>
 
       <Sheet open={!!p} onOpenChange={(o) => !o && setOpenId(null)}>
-        <SheetContent className="w-full gap-0 overflow-y-auto sm:max-w-lg">
+        <SheetContent className="gap-0 overflow-y-auto data-[side=right]:w-full data-[side=right]:sm:max-w-lg">
           {p && (
             <>
               <SheetHeader>

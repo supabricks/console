@@ -289,7 +289,7 @@ export default function Branches() {
       </Dialog>
 
       <Sheet open={!!d} onOpenChange={(o) => !o && setDetail(null)}>
-        <SheetContent className="w-full gap-0 overflow-y-auto sm:max-w-lg">
+        <SheetContent className="gap-0 overflow-y-auto data-[side=right]:w-full data-[side=right]:sm:max-w-lg">
           {d && (
             <>
               <SheetHeader>

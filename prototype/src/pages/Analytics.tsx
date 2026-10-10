@@ -95,7 +95,7 @@ export function Versions() {
       <p className="mt-2 text-xs text-muted-foreground">Showing the {kept.length} most recent. A version in use by a session, or pinned, is never removed by clean-up. <BackingTag id="AN-02b" className="ml-1" /></p>
 
       <Sheet open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
-        <SheetContent className="w-full gap-0 overflow-y-auto sm:max-w-lg">
+        <SheetContent className="gap-0 overflow-y-auto data-[side=right]:w-full data-[side=right]:sm:max-w-lg">
           {detail && (
             <>
               <SheetHeader>

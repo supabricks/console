@@ -246,3 +246,22 @@ will mark those with a small "preview" tag so reviewers can tell what exists.
 | JB-05 | Parameters | Named values with run-time placeholders | New (#297) |
 | JB-06 | Identity | Runs as a service account, with an access check linking to Access | New (#297) |
 | JB-07 | Failure notifications | People and groups told on failure and recovery | New (#298) |
+
+## Alerts
+
+| ID | Screen | Contents | Backend |
+|---|---|---|---|
+| AL-01 | Alerts, bell in the top bar | Open and resolved alerts, detail with what happened and where it was sent | New (#298) |
+| AL-02 | Rules | Twelve built-in conditions by area: on or off, threshold, severity, recipients | New (#298) |
+| AL-03 | Acknowledge, mute | Stop reminders without closing the alert | New (#298) |
+| AL-04 | Destinations | Webhook, email, in-console group; test send; delivery log; payload sample | New (#298) |
+| AL-05 | Rules over time | Lag, connection and session-slot rules | New (#298, #247, #267) |
+
+## Secrets (under Access)
+
+| ID | Screen | Contents | Backend |
+|---|---|---|---|
+| SC-01 | Secrets list, New secret, Replace value | Write-only values, description, age, delete | New (#299) |
+| SC-02 | Reading a secret | Runtime read by name, redaction | New (#299) |
+| SC-03 | Secret detail | Who may use or manage it, where it is used, recent reads | New (#299) |
+| SC-04 | Required but missing | Names the project declares and has no value for | New (#299) |

@@ -401,7 +401,7 @@ export default function Catalog() {
       </Tabs>
       <PublishDialog open={publish} onOpenChange={setPublish} />
       <Sheet open={service} onOpenChange={setService}>
-        <SheetContent className="w-full gap-0 overflow-y-auto sm:max-w-md">
+        <SheetContent className="gap-0 overflow-y-auto data-[side=right]:w-full data-[side=right]:sm:max-w-md">
           <SheetHeader><SheetTitle className="flex items-center gap-2">Catalog service <BackingTag id="UC-06" /></SheetTitle><SheetDescription>The Unity Catalog server this installation runs for you.</SheetDescription></SheetHeader>
           <div className="grid gap-5 px-4 pb-6 text-[13px]">
             <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">

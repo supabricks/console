@@ -102,7 +102,7 @@ export function Roles() {
       </Dialog>
 
       <Sheet open={check} onOpenChange={setCheck}>
-        <SheetContent className="w-full gap-0 overflow-y-auto sm:max-w-lg">
+        <SheetContent className="gap-0 overflow-y-auto data-[side=right]:w-full data-[side=right]:sm:max-w-lg">
           <SheetHeader><SheetTitle className="flex items-center gap-2">Check someone’s access <BackingTag id="AC-11" /></SheetTitle><SheetDescription>Everything one person or service account can do in {PROJECT}, and which assignment gives it to them.</SheetDescription></SheetHeader>
           <div className="grid gap-4 px-4 pb-6">
             <SubjectPicker value={person} onChange={setPerson} only="principal" />

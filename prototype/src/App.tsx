@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { HashRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
-import { BookOpen, Boxes, CalendarClock, Check, ChevronRight, ChevronsUpDown, Database, GitBranch, LayoutDashboard, KeyRound, LibraryBig, ListChecks, LogOut, Moon, RefreshCw, ScrollText, Search, ShieldCheck, Sparkles, Sun, Tags, UserRound, Users } from 'lucide-react'
+import { Bell, BookOpen, Boxes, CalendarClock, Check, ChevronRight, ChevronsUpDown, Database, GitBranch, LayoutDashboard, KeyRound, LibraryBig, ListChecks, LogOut, Moon, RefreshCw, ScrollText, Search, ShieldCheck, Sparkles, Sun, Tags, UserRound, Users } from 'lucide-react'
 import { StatusBadge } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command'
@@ -16,6 +16,9 @@ import { BACKING } from '@/lib/backing'
 import { StoreProvider, useStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { AccessProvider } from '@/lib/access'
+import { AlertsProvider, useAlerts } from '@/lib/alerts'
+import Alerts, { AlertBell, AlertDestinations, AlertRules } from '@/pages/Alerts'
+import Secrets from '@/pages/Secrets'
 import { CatalogGrants, DataPermissions, ProjectAudit, Roles, RunPermissions } from '@/pages/Access'
 import { AuditLog, Groups, People, ServiceAccounts, SignInSettings } from '@/pages/Admin'
 import { Sessions, Versions } from '@/pages/Analytics'
@@ -72,11 +75,17 @@ const SECTIONS: Section[] = [
     { to: '/catalog/publications', label: 'Publications' },
     { to: '/catalog/shared', label: 'Shared datasets' },
   ] },
+  { id: 'alerts', label: 'Alerts', icon: Bell, tone: 'text-muted-foreground', to: '/alerts', children: [
+    { to: '/alerts', label: 'Alerts', match: (p) => p === '/alerts' },
+    { to: '/alerts/rules', label: 'Rules' },
+    { to: '/alerts/destinations', label: 'Destinations' },
+  ] },
   { id: 'access', label: 'Access', icon: ShieldCheck, tone: 'text-muted-foreground', to: '/access/roles', children: [
     { to: '/access/roles', label: 'Roles' },
     { to: '/access/data', label: 'Data permissions' },
     { to: '/access/runs', label: 'Run permissions' },
     { to: '/access/catalog', label: 'Catalog grants' },
+    { to: '/access/secrets', label: 'Secrets' },
     { to: '/access/audit', label: 'Access log' },
   ] },
 ]
@@ -103,6 +112,7 @@ export function Mark({ className }: { className?: string }) {
 
 function Shell() {
   const { databases, setDbId, db, dbBranches, branchName, setBranchName, showBacking, setShowBacking, pipelines, jobs } = useStore()
+  const { unseen } = useAlerts()
   const loc = useLocation()
   const nav = useNavigate()
   const path = loc.pathname
@@ -213,7 +223,8 @@ function Shell() {
                     <SidebarMenuItem key={s.id}>
                       <SidebarMenuButton tooltip={s.label} onClick={() => (here ? toggle(s.id) : nav(s.to))} className={cn(here ? 'font-semibold' : 'font-medium text-sidebar-foreground/80')} aria-expanded={isOpen}>
                         <s.icon className={s.tone} /><span>{s.label}</span>
-                        <ChevronRight className={cn('ml-auto size-3.5! text-muted-foreground transition-transform', isOpen && 'rotate-90')} />
+                        {s.id === 'alerts' && unseen.length > 0 && <span className="tabular ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-white group-data-[collapsible=icon]:hidden">{unseen.length}</span>}
+                        <ChevronRight className={cn('size-3.5! text-muted-foreground transition-transform', !(s.id === 'alerts' && unseen.length > 0) && 'ml-auto', isOpen && 'rotate-90')} />
                       </SidebarMenuButton>
                       {isOpen && s.id !== 'databases' && (
                         <SidebarMenuSub className="mr-0 pr-0">
@@ -334,6 +345,7 @@ function Shell() {
               <Search className="size-3.5" /><span className="max-xl:hidden">Search or jump to</span>
               <kbd className="ml-auto rounded border bg-background px-1.5 text-[11px] max-xl:hidden">Ctrl K</kbd>
             </button>
+            {!atHome && <AlertBell />}
             <Button variant="ghost" size="icon-sm" aria-label="Toggle theme" className="text-muted-foreground" onClick={() => setDark(!dark)}>{dark ? <Sun /> : <Moon />}</Button>
           </div>
         </header>
@@ -369,6 +381,10 @@ function Shell() {
             <Route path="/sync/new" element={<SyncCreate />} />
             <Route path="/sync/:id" element={<SyncDetail />} />
             <Route path="/sync/:id/:tab" element={<SyncDetail />} />
+            <Route path="/alerts" element={<Alerts />} />
+            <Route path="/alerts/rules" element={<AlertRules />} />
+            <Route path="/alerts/destinations" element={<AlertDestinations />} />
+            <Route path="/access/secrets" element={<Secrets />} />
             <Route path="/access" element={<Navigate to="/access/roles" replace />} />
             <Route path="/access/roles" element={<Roles />} />
             <Route path="/access/data" element={<DataPermissions />} />
@@ -431,12 +447,12 @@ export default function App() {
     <HashRouter>
       <StoreProvider>
         <TooltipProvider delayDuration={150}>
-          <AccessProvider>
+          <AccessProvider><AlertsProvider>
             <Routes>
               <Route path="/signin" element={<SignIn />} />
               <Route path="*" element={<Shell />} />
             </Routes>
-          </AccessProvider>
+          </AlertsProvider></AccessProvider>
           <Toaster position="bottom-right" />
         </TooltipProvider>
       </StoreProvider>

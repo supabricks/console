@@ -61,7 +61,7 @@ const TONE: Record<string, string> = {
   suspended: 'text-muted-foreground', idle: 'text-muted-foreground',
   provisioning: 'text-info', scaling: 'text-info',
   cancelled: 'text-warning', 'idle in transaction': 'text-warning',
-  failed: 'text-destructive', disabled: 'text-muted-foreground', invited: 'text-info', queued: 'text-info', skipped: 'text-muted-foreground',
+  failed: 'text-destructive', disabled: 'text-muted-foreground', invited: 'text-info', queued: 'text-info', skipped: 'text-muted-foreground', open: 'text-destructive', acknowledged: 'text-warning', resolved: 'text-success',
 }
 
 /** Status is always a word; the mark only reinforces it. */
