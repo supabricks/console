@@ -265,3 +265,12 @@ will mark those with a small "preview" tag so reviewers can tell what exists.
 | SC-02 | Reading a secret | Runtime read by name, redaction | New (#299) |
 | SC-03 | Secret detail | Who may use or manage it, where it is used, recent reads | New (#299) |
 | SC-04 | Required but missing | Names the project declares and has no value for | New (#299) |
+
+## Usage
+
+| ID | Screen | Contents | Backend |
+|---|---|---|---|
+| UQ-01 | Project: Usage | Storage by kind and database, growth, running time, activity, what could be reclaimed | New (#300, #246) |
+| UQ-02 | Session time by who | People and jobs holding the two analytical slots | New (#300, #272) |
+| UQ-03 | Limits | Server-wide limits and this project's share; per-project limits not available | New (#300) |
+| UQ-04 | Administration: Usage | Disk and capacity divided between projects | New (#300) |

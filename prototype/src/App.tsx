@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { HashRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
-import { Bell, BookOpen, Boxes, CalendarClock, Check, ChevronRight, ChevronsUpDown, Database, GitBranch, LayoutDashboard, KeyRound, LibraryBig, ListChecks, LogOut, Moon, RefreshCw, ScrollText, Search, ShieldCheck, Sparkles, Sun, Tags, UserRound, Users } from 'lucide-react'
+import { Bell, BookOpen, Boxes, ChartNoAxesColumn, CalendarClock, Check, ChevronRight, ChevronsUpDown, Database, GitBranch, LayoutDashboard, KeyRound, LibraryBig, ListChecks, LogOut, Moon, RefreshCw, ScrollText, Search, ShieldCheck, Sparkles, Sun, Tags, UserRound, Users } from 'lucide-react'
 import { StatusBadge } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command'
@@ -19,6 +19,7 @@ import { AccessProvider } from '@/lib/access'
 import { AlertsProvider, useAlerts } from '@/lib/alerts'
 import Alerts, { AlertBell, AlertDestinations, AlertRules } from '@/pages/Alerts'
 import Secrets from '@/pages/Secrets'
+import Usage, { AllUsage } from '@/pages/Usage'
 import { CatalogGrants, DataPermissions, ProjectAudit, Roles, RunPermissions } from '@/pages/Access'
 import { AuditLog, Groups, People, ServiceAccounts, SignInSettings } from '@/pages/Admin'
 import { Sessions, Versions } from '@/pages/Analytics'
@@ -95,6 +96,7 @@ const ADMIN: (Leaf & { icon: typeof Database })[] = [
   { to: '/admin/groups', label: 'Groups', icon: Users },
   { to: '/admin/services', label: 'Service accounts', icon: KeyRound },
   { to: '/admin/signin', label: 'Sign-in', icon: ShieldCheck },
+  { to: '/admin/usage', label: 'Usage', icon: ChartNoAxesColumn },
   { to: '/admin/audit', label: 'Audit log', icon: ScrollText },
 ]
 const DB_TABS: [string, string][] = [['overview', 'Overview'], ['connect', 'Connect'], ['keys', 'API keys'], ['compute', 'Compute'], ['observability', 'Observability'], ['roles', 'Roles'], ['extensions', 'Extensions'], ['backups', 'Backups'], ['settings', 'Settings']]
@@ -145,6 +147,7 @@ function Shell() {
   const trail: { label: ReactNode; to?: string }[] = []
   if (seg[0] === 'overview') trail.push({ label: 'Overview' })
   else if (seg[0] === 'project') trail.push({ label: 'Definition', to: '/project' }, { label: ({ files: 'Files', deploy: 'Deploy', package: 'Package' } as Record<string, string>)[seg[1]] ?? 'Resources' })
+  else if (seg[0] === 'usage') trail.push({ label: 'Usage' })
   else if (seg[0] === 'backend') trail.push({ label: 'Backend status' })
   else if (sec) {
     trail.push({ label: sec.label, to: sec.to })
@@ -207,6 +210,9 @@ function Shell() {
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={path.startsWith('/project')} tooltip="Definition"><NavLink to="/project"><Boxes /><span>Definition</span></NavLink></SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={path === '/usage'} tooltip="Usage"><NavLink to="/usage"><ChartNoAxesColumn /><span>Usage</span></NavLink></SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
@@ -381,6 +387,8 @@ function Shell() {
             <Route path="/sync/new" element={<SyncCreate />} />
             <Route path="/sync/:id" element={<SyncDetail />} />
             <Route path="/sync/:id/:tab" element={<SyncDetail />} />
+            <Route path="/usage" element={<Usage />} />
+            <Route path="/admin/usage" element={<AllUsage />} />
             <Route path="/alerts" element={<Alerts />} />
             <Route path="/alerts/rules" element={<AlertRules />} />
             <Route path="/alerts/destinations" element={<AlertDestinations />} />
@@ -410,6 +418,7 @@ function Shell() {
             <CommandGroup heading="Project">
               <CommandItem onSelect={() => run(() => nav('/overview'))}><LayoutDashboard />Overview</CommandItem>
               <CommandItem onSelect={() => run(() => nav('/project'))}><Boxes />Definition</CommandItem>
+              <CommandItem onSelect={() => run(() => nav('/usage'))}><ChartNoAxesColumn />Usage</CommandItem>
               <CommandItem onSelect={() => run(() => nav('/home'))}><Boxes />All projects</CommandItem>
             </CommandGroup>
             {SECTIONS.map((s) => (

@@ -151,6 +151,10 @@ export const BACKING: Backing[] = [
   { id: 'SC-02', section: 'Secrets', title: 'Read a secret by name in a notebook or job, redacted in outputs and logs', status: 'new', note: 'No runtime API, and governed runs have no outside network today.', issues: [299] },
   { id: 'SC-03', section: 'Secrets', title: 'Who may use and who may manage each secret, and a record of every read', status: 'new', note: 'No grants or audit entries for secrets.', issues: [299] },
   { id: 'SC-04', section: 'Secrets', title: 'A project declares the secret names it needs; missing ones are reported', status: 'new', note: 'supabricks.toml has no secret requirement, so apply cannot report what is missing.', issues: [299] },
+  { id: 'UQ-01', section: 'Usage', title: 'Per-project usage over time: storage by kind, running time, session time, runs', status: 'new', note: 'Storage size is not reported per database or branch, and nothing aggregates use per project.', issues: [300, 246] },
+  { id: 'UQ-02', section: 'Usage', title: 'Analytical session time by person and job', status: 'new', note: 'A session record has no owner.', issues: [300, 272] },
+  { id: 'UQ-03', section: 'Usage', title: 'Limits per project', status: 'new', note: 'Every limit is installation-wide and fixed: two session slots, one incremental capture, 512 MiB buffers.', issues: [300] },
+  { id: 'UQ-04', section: 'Usage', title: 'Usage across projects for administrators', status: 'new', note: 'Nothing compares projects or shows which one holds shared capacity.', issues: [300] },
 ]
 
 export const backing = (id: string) => BACKING.find((b) => b.id === id)
