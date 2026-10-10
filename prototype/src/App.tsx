@@ -17,6 +17,7 @@ import { Sessions, Versions } from '@/pages/Analytics'
 import BackendStatus from '@/pages/BackendStatus'
 import Branches from '@/pages/Branches'
 import DatabaseDetail from '@/pages/DatabaseDetail'
+import Catalog from '@/pages/Catalog'
 import Databases from '@/pages/Databases'
 import NotebookEditor from '@/pages/NotebookEditor'
 import Notebooks, { Environment } from '@/pages/Notebooks'
@@ -40,10 +41,9 @@ const LAKE = [
   { to: '/analytics/versions', label: 'Versions', icon: Layers },
   { to: '/analytics/sessions', label: 'Sessions', icon: Cpu },
   { to: '/notebooks', label: 'Notebooks', icon: BookOpen },
+  { to: '/catalog', label: 'Catalog', icon: LibraryBig },
 ]
-const LATER = [
-  { label: 'Catalog', icon: LibraryBig },
-]
+const LATER: { label: string; icon: typeof BookOpen }[] = []
 const DB_TABS = ['Overview', 'Connect', 'API keys', 'Compute', 'Observability', 'Roles', 'Extensions', 'Backups', 'Settings']
 
 /** Rows meeting columns: the transactional and analytical engines over one dataset. */
@@ -78,7 +78,7 @@ function Shell() {
   const seg = loc.pathname.split('/').filter(Boolean)
   const gaps = BACKING.filter((b) => b.status !== 'live').length
   const fullBleed = ['tables', 'sql', 'explorer'].includes(seg[0]) || loc.pathname === '/analytics/sql' || (seg[0] === 'notebooks' && !!seg[1] && seg[1] !== 'environment')
-  const scoped = !['backend', 'sync', 'analytics', 'notebooks'].includes(seg[0]) && !(seg[0] === 'databases' && !seg[1])
+  const scoped = !['backend', 'sync', 'analytics', 'notebooks', 'catalog'].includes(seg[0]) && !(seg[0] === 'databases' && !seg[1])
   const run = (fn: () => void) => { setPalette(false); fn() }
 
   return (
@@ -234,6 +234,8 @@ function Shell() {
             <Route path="/notebooks" element={<Notebooks />} />
             <Route path="/notebooks/environment" element={<Environment />} />
             <Route path="/notebooks/:name" element={<NotebookEditor />} />
+            <Route path="/catalog" element={<Catalog />} />
+            <Route path="/catalog/:tab" element={<Catalog />} />
             <Route path="/sync" element={<Sync />} />
             <Route path="/sync/new" element={<SyncCreate />} />
             <Route path="/sync/:id" element={<SyncDetail />} />

@@ -399,3 +399,36 @@ export const SESSIONS: Session[] = [
 ]
 export const SLOTS = 2
 export const slotsOf = (s: Session) => (s.profile === 'analytical' ? 2 : 1)
+
+// ---- Catalog (Unity Catalog) ----
+
+export type CatColumn = { name: string; type: string; nullable: boolean; comment?: string }
+export type CatTable = { catalog: string; schema: string; name: string; kind: 'own' | 'shared'; columns: CatColumn[]; rows: number; comment?: string; source?: string }
+export type Publication = { id: string; name: string; pipeline: string; revision: number; version: number; follows: 'latest' | 'fixed'; state: 'published' | 'withdrawn' | 'publishing'; published: string; consumers: string[] }
+export type SharedDataset = { id: string; name: string; owner: string; revision: number; latest: number; published: string; tables: CatTable[]; bound: string | null; comment: string }
+
+const col = (name: string, type: string, nullable = false, comment?: string): CatColumn => ({ name, type, nullable, comment })
+const COMMENTS: Record<string, string> = { 'orders.amount': 'Order total in the order currency, tax included.', 'orders.status': 'pending, paid, shipped or refunded.', 'customers.tier': 'Subscription tier: free, pro or enterprise.', 'customers.region': 'Sales region the customer is assigned to.' }
+export const OWN_TABLES: CatTable[] = ['customers', 'orders', 'order_items'].map((n) => {
+  const t = TABLES.find((x) => x.name === n)!
+  return { catalog: 'sales_analytics', schema: 'app', name: n, kind: 'own', rows: t.rows, comment: t.comment, source: `public.${n}`, columns: t.columns.map((c) => col(c.name, deltaType(c.type).delta ?? c.type, c.nullable, COMMENTS[`${n}.${c.name}`])) }
+})
+const fin = (name: string, rows: number, comment: string, columns: CatColumn[]): CatTable => ({ catalog: 'finance', schema: 'billing', name, kind: 'shared', rows, comment, columns })
+export const SHARED: SharedDataset[] = [
+  { id: 'ds_fin', name: 'finance.billing', owner: 'finance-ops', revision: 12, latest: 13, published: 'Oct 8, 02:00', bound: 'Sep 29', comment: 'Invoices and payments from the billing database, refreshed nightly.',
+    tables: [
+      fin('invoices', 48210, 'One row per invoice issued.', [col('id', 'long'), col('customer_id', 'long'), col('issued_on', 'date'), col('due_on', 'date'), col('total', 'decimal(12,2)'), col('currency', 'string'), col('status', 'string')]),
+      fin('payments', 61904, 'Payments received against invoices.', [col('id', 'long'), col('invoice_id', 'long'), col('received_at', 'timestamp (UTC)'), col('amount', 'decimal(12,2)'), col('method', 'string', true)]),
+    ] },
+  { id: 'ds_mkt', name: 'growth.marketing', owner: 'growth', revision: 5, latest: 5, published: 'Oct 9, 06:30', bound: null, comment: 'Campaigns and daily spend by channel.',
+    tables: [
+      { catalog: 'growth', schema: 'marketing', name: 'campaigns', kind: 'shared', rows: 312, columns: [col('id', 'long'), col('name', 'string'), col('channel', 'string'), col('started_on', 'date'), col('ended_on', 'date', true)] },
+      { catalog: 'growth', schema: 'marketing', name: 'spend_daily', kind: 'shared', rows: 18420, columns: [col('campaign_id', 'long'), col('day', 'date'), col('spend', 'decimal(12,2)'), col('clicks', 'long')] },
+    ] },
+  { id: 'ds_fx', name: 'finance.reference', owner: 'finance-ops', revision: 40, latest: 40, published: 'Today 00:05', bound: null, comment: 'Daily exchange rates against USD.',
+    tables: [{ catalog: 'finance', schema: 'reference', name: 'fx_rates', kind: 'shared', rows: 9125, columns: [col('day', 'date'), col('currency', 'string'), col('rate_to_usd', 'decimal(18,8)')] }] },
+]
+export const PUBLICATIONS: Publication[] = [
+  { id: 'pub_3f9a12c0', name: 'sales_analytics.app', pipeline: 'pl_7c41e0a2', revision: 3, version: 4169, follows: 'fixed', state: 'published', published: 'Oct 8, 16:20', consumers: ['finance-ops'] },
+]
+export const sampleFor = (t: CatTable): Row[] => (t.kind === 'own' ? rowsFor(t.name, 12) : Array.from({ length: 8 }, (_, i) => Object.fromEntries(t.columns.map((c, j) => [c.name, c.type === 'long' ? 9000 + i * 7 + j : c.type === 'date' ? `2026-10-0${(i % 9) + 1}` : c.type.startsWith('decimal') ? Number((120 + i * 37.5 + j).toFixed(2)) : c.type.startsWith('timestamp') ? `2026-10-0${(i % 9) + 1} 0${i}:15:00+00` : c.nullable && i % 3 === 0 ? null : ['USD', 'EUR', 'paid', 'open', 'card', 'search', 'email', 'Autumn launch'][(i + j) % 8]]))))

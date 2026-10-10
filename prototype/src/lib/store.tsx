@@ -1,9 +1,9 @@
 import { createContext, useContext, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { API_KEYS, BRANCHES, DATABASES, PIPELINES, SESSIONS } from './data'
+import { API_KEYS, BRANCHES, DATABASES, PIPELINES, PUBLICATIONS, SESSIONS, SHARED } from './data'
 import { NOTEBOOKS, PACKAGES } from './notebooks'
 import type { Notebook, Package } from './notebooks'
-import type { ApiKey, Branch, Database, Pipeline, Session } from './data'
+import type { ApiKey, Branch, Database, Pipeline, Publication, Session, SharedDataset } from './data'
 
 type Store = {
   databases: Database[]
@@ -18,6 +18,10 @@ type Store = {
   setNotebooks: (fn: (n: Notebook[]) => Notebook[]) => void
   packages: Package[]
   setPackages: (fn: (p: Package[]) => Package[]) => void
+  publications: Publication[]
+  setPublications: (fn: (p: Publication[]) => Publication[]) => void
+  shared: SharedDataset[]
+  setShared: (fn: (s: SharedDataset[]) => SharedDataset[]) => void
   apiKeys: ApiKey[]
   setApiKeys: (fn: (k: ApiKey[]) => ApiKey[]) => void
   dbId: string
@@ -39,6 +43,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [apiKeys, setKeys] = useState(API_KEYS)
   const [pipelines, setPls] = useState(PIPELINES)
   const [sessions, setSes] = useState(SESSIONS)
+  const [publications, setPubs] = useState(PUBLICATIONS)
+  const [shared, setShr] = useState(SHARED)
   const [notebooks, setNbs] = useState(NOTEBOOKS)
   const [packages, setPkgs] = useState(PACKAGES)
   const [dbId, setDbIdRaw] = useState('db_app')
@@ -56,6 +62,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       apiKeys, setApiKeys: (fn) => setKeys(fn),
       pipelines, setPipelines: (fn) => setPls(fn),
       sessions, setSessions: (fn) => setSes(fn),
+      publications, setPublications: (fn) => setPubs(fn),
+      shared, setShared: (fn) => setShr(fn),
       notebooks, setNotebooks: (fn) => setNbs(fn),
       packages, setPackages: (fn) => setPkgs(fn),
       dbId: db.id,
@@ -63,7 +71,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       branchName: branch?.name ?? 'main', setBranchName,
       db, branch, dbBranches, showBacking, setShowBacking,
     }
-  }, [databases, branches, apiKeys, pipelines, sessions, notebooks, packages, dbId, branchName, showBacking])
+  }, [databases, branches, apiKeys, pipelines, sessions, publications, shared, notebooks, packages, dbId, branchName, showBacking])
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
