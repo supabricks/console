@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { API_KEYS, BRANCHES, DATABASES, PIPELINES } from './data'
-import type { ApiKey, Branch, Database, Pipeline } from './data'
+import { API_KEYS, BRANCHES, DATABASES, PIPELINES, SESSIONS } from './data'
+import type { ApiKey, Branch, Database, Pipeline, Session } from './data'
 
 type Store = {
   databases: Database[]
@@ -10,6 +10,8 @@ type Store = {
   setBranches: (fn: (b: Branch[]) => Branch[]) => void
   pipelines: Pipeline[]
   setPipelines: (fn: (p: Pipeline[]) => Pipeline[]) => void
+  sessions: Session[]
+  setSessions: (fn: (s: Session[]) => Session[]) => void
   apiKeys: ApiKey[]
   setApiKeys: (fn: (k: ApiKey[]) => ApiKey[]) => void
   dbId: string
@@ -30,6 +32,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [branches, setBrs] = useState(BRANCHES)
   const [apiKeys, setKeys] = useState(API_KEYS)
   const [pipelines, setPls] = useState(PIPELINES)
+  const [sessions, setSes] = useState(SESSIONS)
   const [dbId, setDbIdRaw] = useState('db_app')
   const [branchName, setBranchName] = useState('main')
   const [showBacking, setShowBackingRaw] = useState(() => { try { return localStorage.getItem('sb-backing') === '1' } catch { return false } })
@@ -44,12 +47,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       branches, setBranches: (fn) => setBrs(fn),
       apiKeys, setApiKeys: (fn) => setKeys(fn),
       pipelines, setPipelines: (fn) => setPls(fn),
+      sessions, setSessions: (fn) => setSes(fn),
       dbId: db.id,
       setDbId: (id) => { setDbIdRaw(id); setBranchName('main') },
       branchName: branch?.name ?? 'main', setBranchName,
       db, branch, dbBranches, showBacking, setShowBacking,
     }
-  }, [databases, branches, apiKeys, pipelines, dbId, branchName, showBacking])
+  }, [databases, branches, apiKeys, pipelines, sessions, dbId, branchName, showBacking])
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { HashRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
-import { BookOpen, Check, ChevronsUpDown, Code2, Database, FolderTree, GitBranch, LibraryBig, ListChecks, Moon, RefreshCw, Search, Sparkles, Sun, Table2, Tags } from 'lucide-react'
+import { BookOpen, Check, Cpu, Layers, ChevronsUpDown, Code2, Database, FolderTree, GitBranch, LibraryBig, ListChecks, Moon, RefreshCw, Search, Sparkles, Sun, Table2, Tags } from 'lucide-react'
 import { StatusBadge } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command'
@@ -13,6 +13,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { BACKING } from '@/lib/backing'
 import { StoreProvider, useStore } from '@/lib/store'
+import { Sessions, Versions } from '@/pages/Analytics'
 import BackendStatus from '@/pages/BackendStatus'
 import Branches from '@/pages/Branches'
 import DatabaseDetail from '@/pages/DatabaseDetail'
@@ -31,9 +32,13 @@ const NAV = [
   { to: '/sql', label: 'SQL editor', icon: Code2 },
   { to: '/explorer', label: 'Object explorer', icon: FolderTree },
 ]
-const LAKE = [{ to: '/sync', label: 'Sync', icon: RefreshCw }]
+const LAKE = [
+  { to: '/sync', label: 'Sync', icon: RefreshCw },
+  { to: '/analytics/sql', label: 'Spark SQL', icon: Sparkles },
+  { to: '/analytics/versions', label: 'Versions', icon: Layers },
+  { to: '/analytics/sessions', label: 'Sessions', icon: Cpu },
+]
 const LATER = [
-  { label: 'Analytics', icon: Sparkles },
   { label: 'Notebooks', icon: BookOpen },
   { label: 'Catalog', icon: LibraryBig },
 ]
@@ -70,8 +75,8 @@ function Shell() {
   }, [])
   const seg = loc.pathname.split('/').filter(Boolean)
   const gaps = BACKING.filter((b) => b.status !== 'live').length
-  const fullBleed = ['tables', 'sql', 'explorer'].includes(seg[0])
-  const scoped = !['backend', 'sync'].includes(seg[0]) && !(seg[0] === 'databases' && !seg[1])
+  const fullBleed = ['tables', 'sql', 'explorer'].includes(seg[0]) || loc.pathname === '/analytics/sql'
+  const scoped = !['backend', 'sync', 'analytics'].includes(seg[0]) && !(seg[0] === 'databases' && !seg[1])
   const run = (fn: () => void) => { setPalette(false); fn() }
 
   return (
@@ -218,8 +223,12 @@ function Shell() {
             <Route path="/databases/:dbName/:tab" element={<DatabaseDetail />} />
             <Route path="/branches" element={<Branches />} />
             <Route path="/tables" element={<TableEditor />} />
-            <Route path="/sql" element={<SqlEditor />} />
+            <Route path="/sql" element={<SqlEditor key="pg" />} />
             <Route path="/explorer" element={<ObjectExplorer />} />
+            <Route path="/analytics" element={<Navigate to="/analytics/sql" replace />} />
+            <Route path="/analytics/sql" element={<SqlEditor key="spark" engine="spark" />} />
+            <Route path="/analytics/versions" element={<Versions />} />
+            <Route path="/analytics/sessions" element={<Sessions />} />
             <Route path="/sync" element={<Sync />} />
             <Route path="/sync/new" element={<SyncCreate />} />
             <Route path="/sync/:id" element={<SyncDetail />} />

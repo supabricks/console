@@ -375,3 +375,27 @@ export function deltaType(pg: string): { delta: string | null; why?: string } {
 export const MODE_LABEL: Record<SyncMode, string> = { snapshot: 'Snapshot', triggered: 'Triggered', continuous: 'Continuous' }
 export const fmtBytes = (b: number) => (b >= 1 << 30 ? `${(b / (1 << 30)).toFixed(1)} GiB` : b >= 1 << 20 ? `${(b / (1 << 20)).toFixed(1)} MiB` : b >= 1024 ? `${Math.round(b / 1024)} KiB` : `${b} B`)
 export const fmtEvery = (s: number | null) => (!s ? 'Manual' : s % 86400 === 0 ? `Every ${s / 86400 === 1 ? 'day' : `${s / 86400} days`}` : s % 3600 === 0 ? `Every ${s / 3600 === 1 ? 'hour' : `${s / 3600} hours`}` : `Every ${s / 60} minutes`)
+
+// ---- Analytics: versions and sessions ----
+
+export type Version = { n: number; published: string; lsn: string; by: string; rowsChanged: number; sizeMb: number; tables: number; readers: number }
+export function versionsFor(p: Pipeline, count = 14): Version[] {
+  const base = parseInt(p.publishedLsn.split('/')[1], 16), hi = p.publishedLsn.split('/')[0]
+  return Array.from({ length: Math.min(count, p.version) }, (_, i) => ({
+    n: p.version - i,
+    published: p.mode === 'continuous' ? `Today 14:0${Math.max(0, 5 - Math.floor((i + 1) / 3))}:${String(57 - ((i * 4) % 58)).padStart(2, '0')}` : p.mode === 'snapshot' ? `Oct ${10 - i - 1}, 02:00` : i === 0 ? 'Today 13:54' : `Today ${String(13 - Math.floor(i / 4)).padStart(2, '0')}:${String(54 - ((i * 15) % 60) + (((i * 15) % 60) > 54 ? 60 : 0)).padStart(2, '0')}`,
+    lsn: `${hi}/${(base - i * 0x1a40).toString(16).toUpperCase()}`,
+    by: p.mode === 'continuous' ? 'Continuous sync' : i === 4 ? 'Manual run' : p.mode === 'snapshot' ? 'Nightly snapshot' : 'Scheduled run',
+    rowsChanged: p.mode === 'snapshot' ? 1_204_000 + i * 811 : p.mode === 'continuous' ? 40 + ((i * 37) % 160) : 2_100 + ((i * 977) % 9_000),
+    sizeMb: p.mode === 'snapshot' ? 1840 - i * 2 : 96 - i * 0.02,
+    tables: p.tables.length,
+    readers: 0,
+  }))
+}
+
+export type Session = { id: string; owner: string; ownerKind: 'sql' | 'notebook' | 'cli'; pipeline: string; version: number; profile: 'compact' | 'analytical'; state: 'starting' | 'ready' | 'busy'; started: string; expiresMin: number }
+export const SESSIONS: Session[] = [
+  { id: 'ses_41c9aa07', owner: 'Notebook: revenue-exploration.ipynb', ownerKind: 'notebook', pipeline: 'pl_7c41e0a2', version: 4169, profile: 'compact', state: 'ready', started: '13:52', expiresMin: 9 },
+]
+export const SLOTS = 2
+export const slotsOf = (s: Session) => (s.profile === 'analytical' ? 2 : 1)
