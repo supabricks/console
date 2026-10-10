@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { HashRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
-import { BookOpen, Boxes, Check, ChevronRight, ChevronsUpDown, Database, GitBranch, LayoutDashboard, KeyRound, LibraryBig, ListChecks, LogOut, Moon, RefreshCw, ScrollText, Search, ShieldCheck, Sparkles, Sun, Tags, UserRound, Users } from 'lucide-react'
+import { BookOpen, Boxes, CalendarClock, Check, ChevronRight, ChevronsUpDown, Database, GitBranch, LayoutDashboard, KeyRound, LibraryBig, ListChecks, LogOut, Moon, RefreshCw, ScrollText, Search, ShieldCheck, Sparkles, Sun, Tags, UserRound, Users } from 'lucide-react'
 import { StatusBadge } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command'
@@ -25,6 +25,7 @@ import Catalog from '@/pages/Catalog'
 import DatabaseDetail from '@/pages/DatabaseDetail'
 import Databases from '@/pages/Databases'
 import Home, { Overview } from '@/pages/Home'
+import Jobs, { AllRuns, JobCreate, JobDetail } from '@/pages/Jobs'
 import NotebookEditor from '@/pages/NotebookEditor'
 import Notebooks, { Environment } from '@/pages/Notebooks'
 import ObjectExplorer from '@/pages/ObjectExplorer'
@@ -61,6 +62,11 @@ const SECTIONS: Section[] = [
     { to: '/notebooks', label: 'All notebooks', match: (p) => p.startsWith('/notebooks') && p !== '/notebooks/environment' },
     { to: '/notebooks/environment', label: 'Python environment' },
   ] },
+  { id: 'jobs', label: 'Jobs', icon: CalendarClock, tone: 'text-olap', to: '/jobs', children: [
+    { to: '/jobs', label: 'All jobs', match: (p) => p.startsWith('/jobs') && p !== '/jobs/new' && p !== '/jobs/runs' },
+    { to: '/jobs/runs', label: 'Runs' },
+    { to: '/jobs/new', label: 'New job' },
+  ] },
   { id: 'catalog', label: 'Catalog', icon: LibraryBig, tone: 'text-olap', to: '/catalog', children: [
     { to: '/catalog/explorer', label: 'Tables', match: (p) => p === '/catalog' || p === '/catalog/explorer' },
     { to: '/catalog/publications', label: 'Publications' },
@@ -96,7 +102,7 @@ export function Mark({ className }: { className?: string }) {
 }
 
 function Shell() {
-  const { databases, setDbId, db, dbBranches, branchName, setBranchName, showBacking, setShowBacking, pipelines } = useStore()
+  const { databases, setDbId, db, dbBranches, branchName, setBranchName, showBacking, setShowBacking, pipelines, jobs } = useStore()
   const loc = useLocation()
   const nav = useNavigate()
   const path = loc.pathname
@@ -136,6 +142,7 @@ function Shell() {
       if (!inDb) trail.push({ label: 'All databases' })
       else trail.push({ label: 'db' }, { label: seg[0] === 'databases' ? (DB_TABS.find(([id]) => id === (seg[2] ?? 'overview'))?.[1] ?? 'Overview') : DB_TOOLS.find((t) => t.to === `/${seg[0]}`)?.label })
     } else if (seg[0] === 'sync' && seg[1] && seg[1] !== 'new') { const p = pipelines.find((x) => x.id === seg[1]); trail.push({ label: 'Pipelines', to: '/sync' }, { label: p ? <>{databases.find((d) => d.id === p.db)?.name} / <span className="font-mono text-[12.5px]">{p.branch}</span></> : 'Pipeline' }) }
+    else if (seg[0] === 'jobs' && seg[1] && seg[1] !== 'new' && seg[1] !== 'runs') trail.push({ label: 'All jobs', to: '/jobs' }, { label: <span className="font-mono text-[12.5px]">{jobs.find((j) => j.id === seg[1])?.name ?? 'Job'}</span> })
     else if (seg[0] === 'notebooks' && seg[1] && seg[1] !== 'environment') trail.push({ label: 'All notebooks', to: '/notebooks' }, { label: decodeURIComponent(seg[1]) })
     else trail.push({ label: sec.children.find(active)?.label ?? sec.label })
   }
@@ -228,8 +235,9 @@ function Shell() {
                               </DropdownMenuContent>
                             </DropdownMenu>
                             <SidebarMenuSub className="mr-0 ml-3 pr-0">
-                              <SidebarMenuSubItem><SidebarMenuSubButton asChild size="sm" isActive={seg[0] === 'databases' && !!seg[1]}><NavLink to={`/databases/${db.name}`}>Overview</NavLink></SidebarMenuSubButton></SidebarMenuSubItem>
+                              <SidebarMenuSubItem><SidebarMenuSubButton asChild size="sm" isActive={seg[0] === 'databases' && !!seg[1] && seg[2] !== 'backups'}><NavLink to={`/databases/${db.name}`}>Overview</NavLink></SidebarMenuSubButton></SidebarMenuSubItem>
                               {DB_TOOLS.map((t) => <SidebarMenuSubItem key={t.to}><SidebarMenuSubButton asChild size="sm" isActive={path === t.to}><NavLink to={t.to}>{t.label}</NavLink></SidebarMenuSubButton></SidebarMenuSubItem>)}
+                              <SidebarMenuSubItem><SidebarMenuSubButton asChild size="sm" isActive={seg[0] === 'databases' && seg[2] === 'backups'}><NavLink to={`/databases/${db.name}/backups`}>Backups</NavLink></SidebarMenuSubButton></SidebarMenuSubItem>
                             </SidebarMenuSub>
                           </SidebarMenuSubItem>
                         </SidebarMenuSub>
@@ -350,6 +358,11 @@ function Shell() {
             <Route path="/notebooks" element={<Notebooks />} />
             <Route path="/notebooks/environment" element={<Environment />} />
             <Route path="/notebooks/:name" element={<NotebookEditor />} />
+            <Route path="/jobs" element={<Jobs />} />
+            <Route path="/jobs/runs" element={<AllRuns />} />
+            <Route path="/jobs/new" element={<JobCreate />} />
+            <Route path="/jobs/:id" element={<JobDetail />} />
+            <Route path="/jobs/:id/:tab" element={<JobDetail />} />
             <Route path="/catalog" element={<Catalog />} />
             <Route path="/catalog/:tab" element={<Catalog />} />
             <Route path="/sync" element={<Sync />} />

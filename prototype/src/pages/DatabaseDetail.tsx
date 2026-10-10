@@ -16,7 +16,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { fmtMb, ROLES, series, SIZES } from '@/lib/data'
 import { cn } from '@/lib/utils'
 import { useStore } from '@/lib/store'
-import { Backups, Extensions, Roles, Settings } from './DatabaseAdmin'
+import { Extensions, Roles, Settings } from './DatabaseAdmin'
+import { Backups } from './DatabaseBackups'
 import { Compute, Observability } from './DatabaseOps'
 
 const TABS = [

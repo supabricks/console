@@ -224,3 +224,25 @@ Built once, used across sections.
 
 Roughly 70 screens and tabs. About a third are new backend work; the prototype
 will mark those with a small "preview" tag so reviewers can tell what exists.
+
+## Backups (database tab)
+
+| ID | Screen | Contents | Backend |
+|---|---|---|---|
+| DB-10a | Restore to a new branch | Timeline over the history window, pick any minute | Platform supports it; no console UI |
+| DB-10d | Restore in place, restore history | Replace the default branch, previous state kept as a branch, typed confirmation | New (#296) |
+| DB-10e | Online backups | Back up now, list with verification, schedule, retention, destination | New (#296) |
+| DB-10g | Timeline events | Schema changes and large writes marked on the timeline | New (#296) |
+| DB-10c | History retention | How far back restore reaches | New (#254) |
+
+## Jobs
+
+| ID | Screen | Contents | Backend |
+|---|---|---|---|
+| JB-01 | Jobs list, New job, job Settings | Notebook or saved query, pinned or latest revision, limits and retries | New (#297) |
+| JB-02 | Triggers | Schedule (interval, hourly, daily, weekdays, cron), after a sync publishes, by hand | New (#297) |
+| JB-03 | Job detail, Runs | Run history, duration chart, run detail with steps, output, log, data version read | New (#297) |
+| JB-04 | Run controls | Run now, pause, resume, stop, run again | New (#297) |
+| JB-05 | Parameters | Named values with run-time placeholders | New (#297) |
+| JB-06 | Identity | Runs as a service account, with an access check linking to Access | New (#297) |
+| JB-07 | Failure notifications | People and groups told on failure and recovery | New (#298) |

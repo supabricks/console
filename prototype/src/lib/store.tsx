@@ -1,6 +1,8 @@
 import { createContext, useContext, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { API_KEYS, BRANCHES, DATABASES, PIPELINES, PUBLICATIONS, SESSIONS, SHARED } from './data'
+import { JOB_RUNS, JOBS } from './jobs'
+import type { Job, JobRun } from './jobs'
 import { NOTEBOOKS, PACKAGES } from './notebooks'
 import type { Notebook, Package } from './notebooks'
 import type { ApiKey, Branch, Database, Pipeline, Publication, Session, SharedDataset } from './data'
@@ -22,6 +24,10 @@ type Store = {
   setPublications: (fn: (p: Publication[]) => Publication[]) => void
   shared: SharedDataset[]
   setShared: (fn: (s: SharedDataset[]) => SharedDataset[]) => void
+  jobs: Job[]
+  setJobs: (fn: (j: Job[]) => Job[]) => void
+  jobRuns: JobRun[]
+  setJobRuns: (fn: (r: JobRun[]) => JobRun[]) => void
   installedRev: number
   setInstalledRev: (n: number) => void
   apiKeys: ApiKey[]
@@ -46,6 +52,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [pipelines, setPls] = useState(PIPELINES)
   const [sessions, setSes] = useState(SESSIONS)
   const [installedRev, setInstalledRev] = useState(3)
+  const [jobs, setJbs] = useState(JOBS)
+  const [jobRuns, setRuns] = useState(JOB_RUNS)
   const [publications, setPubs] = useState(PUBLICATIONS)
   const [shared, setShr] = useState(SHARED)
   const [notebooks, setNbs] = useState(NOTEBOOKS)
@@ -66,6 +74,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       pipelines, setPipelines: (fn) => setPls(fn),
       sessions, setSessions: (fn) => setSes(fn),
       installedRev, setInstalledRev,
+      jobs, setJobs: (fn) => setJbs(fn),
+      jobRuns, setJobRuns: (fn) => setRuns(fn),
       publications, setPublications: (fn) => setPubs(fn),
       shared, setShared: (fn) => setShr(fn),
       notebooks, setNotebooks: (fn) => setNbs(fn),
@@ -75,7 +85,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       branchName: branch?.name ?? 'main', setBranchName,
       db, branch, dbBranches, showBacking, setShowBacking,
     }
-  }, [databases, branches, apiKeys, pipelines, sessions, installedRev, publications, shared, notebooks, packages, dbId, branchName, showBacking])
+  }, [databases, branches, apiKeys, pipelines, sessions, installedRev, jobs, jobRuns, publications, shared, notebooks, packages, dbId, branchName, showBacking])
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

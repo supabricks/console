@@ -32,6 +32,9 @@ export const BACKING: Backing[] = [
   { id: 'DB-10a', section: 'Database detail', title: 'Point-in-time restore to a new branch', status: 'api', note: 'branch create --at-time / --at-lsn exists; the console has no UI for it.' },
   { id: 'DB-10b', section: 'Database detail', title: 'Backup bundles', status: 'api', note: 'backup create / verify / restore are CLI-only and require stopping the cell.' },
   { id: 'DB-10c', section: 'Database detail', title: 'History retention window', status: 'new', note: 'Retention is not exposed or configurable.', issues: [254] },
+  { id: 'DB-10d', section: 'Database detail', title: 'Restore a database in place to a chosen time, with restore history', status: 'new', note: 'A branch can be created at a past time, but nothing rewinds an existing branch or records restores.', issues: [296] },
+  { id: 'DB-10e', section: 'Database detail', title: 'Online backups: back up now, schedule, retention, destination, verification', status: 'new', note: 'The only backup is a whole-installation bundle that stops the runtime. There is no per-database or online backup.', issues: [296] },
+  { id: 'DB-10g', section: 'Database detail', title: 'Schema changes and large writes marked on the restore timeline', status: 'new', note: 'Nothing records notable events against time, so the console cannot show what a restore point comes before.', issues: [296] },
   { id: 'DB-11a', section: 'Database detail', title: 'Rename and set default branch', status: 'api', note: 'branch rename and branch default exist; the console has no UI.' },
   { id: 'DB-11b', section: 'Database detail', title: 'Delete database', status: 'live', note: 'branch delete with typed confirmation.' },
   { id: 'BR-01', section: 'Branches', title: 'Branch list', status: 'live', note: 'Flat table today; the tree view is console-side.' },
@@ -132,6 +135,13 @@ export const BACKING: Backing[] = [
   { id: 'AC-10', section: 'Access', title: 'Audit log for the installation and for each project, with export', status: 'api', note: 'identity admin audit / audit_export and authorization admin audit exist on the server; the console has no UI.' },
   { id: 'AC-10b', section: 'Access', title: 'Audit log: time, search and filters', status: 'new', issues: [308], note: 'The project audit listing returns entries in order, 200 at a time, without the time of each entry and without filters.' },
   { id: 'AC-11', section: 'Access', title: 'Explain one person’s access and where it comes from', status: 'new', issues: [309], note: 'The policy can be read whole, but group membership is admin-only, so the console cannot resolve what one person effectively holds.' },
+  { id: 'JB-01', section: 'Jobs', title: 'Jobs: run a notebook or saved query unattended, at a pinned or latest revision', status: 'new', note: 'Notebooks and saved queries run only when a person runs them. Sync pipelines are the only scheduled work.', issues: [297] },
+  { id: 'JB-02', section: 'Jobs', title: 'Triggers: schedule, after a sync publishes, or by hand', status: 'new', note: 'No scheduler for user work, and no hook on publication of an analytical version.', issues: [297] },
+  { id: 'JB-03', section: 'Jobs', title: 'Run history with outputs, logs and the data version read', status: 'new', note: 'Governed executions are recorded, but there is no run history tied to a job and no stored output for unattended runs.', issues: [297] },
+  { id: 'JB-04', section: 'Jobs', title: 'Run now, pause, resume, stop, retry', status: 'new', note: 'No job lifecycle exists.', issues: [297] },
+  { id: 'JB-05', section: 'Jobs', title: 'Parameters for notebooks and saved queries', status: 'new', note: 'Notebooks and saved queries take no parameters.', issues: [297] },
+  { id: 'JB-06', section: 'Jobs', title: 'Run a job as a service account', status: 'new', note: 'The act-as grant lets a person run one saved revision as another principal; nothing lets a schedule do so.', issues: [297] },
+  { id: 'JB-07', section: 'Jobs', title: 'Tell people when a job fails and when it recovers', status: 'new', note: 'No alerting or notification delivery exists.', issues: [298] },
 ]
 
 export const backing = (id: string) => BACKING.find((b) => b.id === id)

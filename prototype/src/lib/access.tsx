@@ -84,6 +84,7 @@ const RUNS: RunGrant[] = [
   { id: 'rg_1', subject: G('gr_analysts'), grant: 'execute' },
   { id: 'rg_2', subject: G('gr_platform'), grant: 'execute' },
   { id: 'rg_3', subject: G('gr_platform'), grant: 'stop_any' },
+  { id: 'rg_5', subject: P('sv_nightly'), grant: 'execute' },
   { id: 'rg_4', subject: P('pr_priya'), grant: 'act_as', as: 'sv_nightly', source: 'revenue-exploration.ipynb @ 4e1a09c' },
 ]
 const CATALOG: CatalogGrant[] = [

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Archive, History, Lock, Plus, Search } from 'lucide-react'
+import { Lock, Plus, Search } from 'lucide-react'
 import { toast } from 'sonner'
 import { BackingTag, ConfirmDelete, Section } from '@/components/common'
 import { Badge } from '@/components/ui/badge'
@@ -112,58 +112,6 @@ export function Extensions() {
         ))}
       </div>
     </Section>
-  )
-}
-
-export function Backups() {
-  const { db, dbBranches, setBranches } = useStore()
-  const nav = useNavigate()
-  const [when, setWhen] = useState('2026-10-09T13:30')
-  const [name, setName] = useState('restore-oct-09')
-  const [retention, setRetention] = useState('7')
-  const restore = () => {
-    setBranches((b) => [...b, { id: `br_${Math.random().toString(16).slice(2, 10)}`, db: db.id, name, parent: 'main', state: 'running', isDefault: false, created: '2026-10-09 14:06', expires: null, point: `${when.replace('T', ' ')} UTC`, deltaMb: 0, lsn: '0/4A2F0000', createdBy: 'you' }])
-    toast.success(`Branch ${name} created at ${when.replace('T', ' ')} UTC`, { action: { label: 'View branches', onClick: () => nav('/branches') } })
-  }
-  return (
-    <div className="grid gap-8">
-      <Section title="Restore to a point in time" tag={<BackingTag id="DB-10a" />} description="History is kept continuously, so there is nothing to schedule. Restoring creates a new branch at the chosen moment; the original is untouched.">
-        <div className="grid items-end gap-3 md:grid-cols-[1fr_1fr_auto]">
-          <div className="grid gap-1.5"><Label htmlFor="pitr-when">Restore to (UTC)</Label><Input id="pitr-when" type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} min="2026-10-02T14:05" max="2026-10-09T14:05" /></div>
-          <div className="grid gap-1.5"><Label htmlFor="pitr-name">New branch name</Label><Input id="pitr-name" value={name} onChange={(e) => setName(e.target.value)} /></div>
-          <Button disabled={!name || dbBranches.some((b) => b.name === name)} onClick={restore}><History /> Create restore branch</Button>
-        </div>
-        <div className="mt-4">
-          <div className="mb-1 flex justify-between text-xs text-muted-foreground"><span>Oct 2, 14:05</span><span>Restorable window: 7 days</span><span>Now</span></div>
-          <div className="relative h-2 rounded-full bg-primary/25"><div className="absolute top-1/2 size-3.5 -translate-y-1/2 rounded-full border-2 border-background bg-primary" style={{ left: '93%' }} /></div>
-        </div>
-      </Section>
-      <div className="grid gap-8 lg:grid-cols-2">
-        <Section title="History retention" tag={<BackingTag id="DB-10c" />} description="How far back you can branch or restore. Longer retention uses more storage.">
-          <div className="flex items-end gap-3">
-            <div className="grid flex-1 gap-1.5">
-              <Label>Keep history for</Label>
-              <Select value={retention} onValueChange={setRetention}>
-                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="1">1 day</SelectItem><SelectItem value="7">7 days</SelectItem><SelectItem value="14">14 days</SelectItem><SelectItem value="30">30 days</SelectItem></SelectContent>
-              </Select>
-            </div>
-            <Button variant="outline" onClick={() => toast.success(`Retention set to ${retention} days`)}>Save</Button>
-          </div>
-          <p className="mt-3 text-xs text-muted-foreground">Currently storing 1.2 GB of history for {db.name}.</p>
-        </Section>
-        <Section title="Backup bundles" tag={<BackingTag id="DB-10b" />} description="A verified copy of the whole installation that you can move to another machine. Creating one stops every database briefly." actions={<Button size="sm" variant="outline" onClick={() => toast.message('Creating a bundle stops all databases. Run: supabricks backup create PATH')}><Archive /> Create bundle</Button>}>
-          <Table>
-            <TableHeader><TableRow><TableHead>Created</TableHead><TableHead>Size</TableHead><TableHead>Verified</TableHead><TableHead>Location</TableHead></TableRow></TableHeader>
-            <TableBody>
-              {[['2026-10-05 02:00', '6.1 GB', 'Yes'], ['2026-09-28 02:00', '5.8 GB', 'Yes']].map(([t, s, v]) => (
-                <TableRow key={t}><TableCell>{t}</TableCell><TableCell className="tabular">{s}</TableCell><TableCell>{v}</TableCell><TableCell className="font-mono text-xs text-muted-foreground">~/backups/sb-{t.slice(0, 10)}</TableCell></TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Section>
-      </div>
-    </div>
   )
 }
 
