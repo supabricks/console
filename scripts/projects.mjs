@@ -245,7 +245,15 @@ export async function qualifyProjects({
   await packages.getByRole("button", { name: "Discard preview" }).click();
   checks.push("PK06 browser export is byte-identical to CLI packaging");
   // Conflicting destination is rejected by the same durable binding rules.
-  const other = await cliAt(source, "project", "create", "--key", "other");
+  const other = await cliAt(
+    source,
+    "project",
+    "create",
+    "--name",
+    "other",
+    "--key",
+    "other",
+  );
   const origin = new URL(page.url()).origin;
   const session = await (
     await context.request.get(origin + "/api/session", {
